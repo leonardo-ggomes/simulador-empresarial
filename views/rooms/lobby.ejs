@@ -1,0 +1,187 @@
+<div class="space-y-6">
+
+  <!-- Cabeçalho de Boas-Vindas & Ações -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+    <div>
+      <h1 class="text-xl font-bold tracking-tight text-slate-900">Salas de Simulação</h1>
+      <p class="text-xs text-slate-500 mt-0.5">
+        Porto Aurora 2031 • Edital de Inovação Aberta Aurora Hub
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-500">Conectado como <strong class="text-slate-800"><%= currentUser.nome %></strong></span>
+      <span class="badge-status badge-status-neutral uppercase tracking-wider text-[10px]"><%= currentUser.perfil %></span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Painel Lateral: Entrar por Código ou Criar Sala -->
+    <div class="space-y-5">
+      
+      <!-- Card: Entrar por Código -->
+      <div class="app-card p-5 space-y-3">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Acessar Sala</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Insira o código de 6 caracteres fornecido pelo professor:</p>
+        </div>
+
+        <form onsubmit="handleEntrarSala(event)" class="space-y-3">
+          <input type="text" id="codigo-sala" maxlength="6" required placeholder="Ex: AUR402" class="input-base text-center uppercase tracking-widest font-mono font-bold text-sm">
+          <button type="submit" class="w-full btn-primary py-2 text-xs font-medium">
+            Entrar na Simulação
+          </button>
+        </form>
+      </div>
+
+      <!-- Card: Criar Nova Turma (Apenas Professor / Admin) -->
+      <% if (currentUser.perfil === 'professor' || currentUser.perfil === 'admin') { %>
+      <div class="app-card p-5 space-y-3 border-slate-300">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Criar Nova Turma</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Configure um novo cenário multiplayer:</p>
+        </div>
+
+        <form onsubmit="handleCriarSala(event)" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Nome da Turma</label>
+            <input type="text" id="nova-sala-nome" required placeholder="Ex: MBA Business Analytics 2031.1" class="input-base text-xs">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Dificuldade Macroeconômica</label>
+            <select id="nova-sala-dificuldade" class="input-base text-xs bg-white">
+              <option value="iniciante">Iniciante (Notícias claras e 100% confiáveis)</option>
+              <option value="intermediario" selected>Intermediário (Notícias ambíguas, 80% confiabilidade)</option>
+              <option value="avancado">Avançado (Boatos, volatilidade e choques)</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full btn-secondary py-2 text-xs font-semibold">
+            Criar Sala e Gerar Código
+          </button>
+        </form>
+      </div>
+      <% } %>
+
+    </div>
+
+    <!-- Painel Principal: Tabela de Salas Registradas -->
+    <div class="lg:col-span-2 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Suas Salas Ativas</h2>
+        <span class="text-xs text-slate-400">Total: <%= typeof salas !== 'undefined' ? salas.length : 0 %></span>
+      </div>
+
+      <div class="app-card overflow-hidden">
+        <% if (typeof salas !== 'undefined' && salas.length > 0) { %>
+          <div class="overflow-x-auto">
+            <table class="table-editorial">
+              <thead>
+                <tr>
+                  <th>Turma / Sala</th>
+                  <th>Código</th>
+                  <th>Rodada Atual</th>
+                  <th>Status</th>
+                  <th class="text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <% salas.forEach(sala => { %>
+                  <tr>
+                    <td class="font-semibold text-slate-900">
+                      <%= sala.nome %>
+                    </td>
+                    <td>
+                      <span class="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <%= sala.codigo %>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="tabular-nums text-slate-600 font-medium">
+                        R<%= sala.rodada_atual %> de <%= sala.max_rodadas %>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge-status <%= sala.status === 'em_andamento' ? 'badge-status-success' : 'badge-status-neutral' %>">
+                        <%= sala.status === 'em_andamento' ? 'Em Andamento' : (sala.status === 'aberta' ? 'Aberta' : 'Encerrada') %>
+                      </span>
+                    </td>
+                    <td class="text-right">
+                      <div class="inline-flex items-center gap-1.5">
+                        <a href="/sala/<%= sala.id %>/onboarding" class="btn-primary text-xs py-1 px-2.5">
+                          Acessar
+                        </a>
+                        <% if (currentUser.perfil === 'professor' || currentUser.perfil === 'admin') { %>
+                          <a href="/sala/<%= sala.id %>/professor" class="btn-secondary text-xs py-1 px-2.5">
+                            Painel
+                          </a>
+                        <% } %>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="py-12 px-6 text-center text-slate-400 space-y-2">
+            <div class="text-xs font-medium text-slate-600">Nenhuma sala vinculada encontrada</div>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">
+              Digite o código de acesso fornecido pelo professor para ingressar em uma turma existente.
+            </p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+async function handleEntrarSala(e) {
+  e.preventDefault();
+  const codigo = document.getElementById('codigo-sala').value.trim().toUpperCase();
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  try {
+    const res = await fetch('/api/salas/entrar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ codigo })
+    });
+    const data = await res.json();
+    if (data.sucesso) {
+      showToast('Sala localizada. Acessando...', 'sucesso');
+      setTimeout(() => window.location.href = `/sala/${data.sala.id}/onboarding`, 400);
+    } else {
+      showToast(data.erro || 'Sala não encontrada.', 'erro');
+    }
+  } catch (err) {
+    showToast('Falha na requisição.', 'erro');
+  }
+}
+
+async function handleCriarSala(e) {
+  e.preventDefault();
+  const nome = document.getElementById('nova-sala-nome').value.trim();
+  const dificuldade = document.getElementById('nova-sala-dificuldade').value;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  try {
+    const res = await fetch('/api/salas/criar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ nome, dificuldade, maxRodadas: 12 })
+    });
+    const data = await res.json();
+    if (data.sucesso) {
+      showToast(`Turma criada com sucesso. Código: ${data.sala.codigo}`, 'sucesso');
+      setTimeout(() => window.location.reload(), 600);
+    } else {
+      showToast(data.erro || 'Erro ao criar sala.', 'erro');
+    }
+  } catch (err) {
+    showToast('Falha na requisição.', 'erro');
+  }
+}
+</script>

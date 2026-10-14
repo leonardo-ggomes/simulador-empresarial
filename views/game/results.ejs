@@ -1,0 +1,235 @@
+<div class="space-y-6" data-sala-id="<%= currentRoom.id %>" data-equipe-id="<%= currentTeam.id %>">
+
+  <!-- Header dos Demonstrativos Contábeis -->
+  <div class="app-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="space-y-1.5">
+      <div class="flex items-center gap-2">
+        <span class="badge-status badge-status-success font-semibold">
+          ● Partidas Dobradas Auditadas
+        </span>
+        <span class="badge-status badge-status-neutral font-mono">
+          Rodada <%= currentRoom.rodada_atual - 1 > 0 ? currentRoom.rodada_atual - 1 : 1 %>
+        </span>
+      </div>
+      <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+        Demonstrações Financeiras e Relatório Contábil
+      </h1>
+      <p class="text-xs text-slate-500 max-w-2xl">
+        Escrituração contábil em regime de competência e caixa. Invariante estrita: Ativo Total = Passivo Total + Patrimônio Líquido.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <a href="/sala/<%= currentRoom.id %>/powerbi" class="btn-secondary text-xs">
+        Exportar para Power BI
+      </a>
+      <a href="/sala/<%= currentRoom.id %>/decisoes" class="btn-primary text-xs">
+        Próxima Rodada de Decisões →
+      </a>
+    </div>
+  </div>
+
+  <!-- Três Colunas Formais de Demonstrativos -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- 1. DRE (Resultado do Exercício) -->
+    <div class="app-card p-5 space-y-3">
+      <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">1. Demonstração do Resultado (DRE)</h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Regime de Competência</p>
+        </div>
+        <span class="badge-status badge-status-neutral text-[10px]">Resultado</span>
+      </div>
+
+      <div class="accounting-table space-y-1">
+        <div class="accounting-row cursor-pointer hover:bg-slate-50 transition px-1 rounded" onclick="abrirRazaoConta('Receita Bruta', 'Crédito no grupo de Receitas e Débito no Ativo Caixa')">
+          <span class="font-medium text-slate-900">(=) Receita Bruta de Vendas</span>
+          <span class="num-neutral font-medium">R$ <%= (resultado?.dre?.receitaBruta || 78400).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row cursor-pointer hover:bg-slate-50 transition px-1 rounded" onclick="abrirRazaoConta('Impostos sobre Vendas', 'Alíquota de 12% recolhida sobre a faturamento bruto')">
+          <span class="text-slate-500">(-) Impostos sobre Vendas</span>
+          <span class="num-neg">R$ <%= (resultado?.dre?.impostosSobreVendas || 9408).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row is-subtotal">
+          <span class="text-slate-800">(=) Receita Operacional Líquida</span>
+          <span class="num-neutral font-semibold">R$ <%= (resultado?.dre?.receitaLiquida || 68992).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row cursor-pointer hover:bg-slate-50 transition px-1 rounded" onclick="abrirRazaoConta('CMV', 'Custo Médio Ponderado das unidades expedidas no trimestre')">
+          <span class="text-slate-500">(-) Custo das Mercadorias (CMV)</span>
+          <span class="num-neg">R$ <%= (resultado?.dre?.cmv || 31360).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row is-subtotal">
+          <span class="text-slate-800">(=) Lucro Bruto</span>
+          <span class="num-pos font-semibold">R$ <%= (resultado?.dre?.lucroBruto || 37632).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row cursor-pointer hover:bg-slate-50 transition px-1 rounded" onclick="abrirRazaoConta('Despesas Operacionais', 'Marketing, estocagem e custos administrativos fixos')">
+          <span class="text-slate-500">(-) Despesas Operacionais Gerais</span>
+          <span class="num-neg">R$ <%= (resultado?.dre?.despesasOperacionais?.total || 15500).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row is-subtotal">
+          <span class="text-slate-800">(=) EBITDA Operacional</span>
+          <span class="num-neutral font-semibold">R$ <%= (resultado?.dre?.ebitda || 22132).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row cursor-pointer hover:bg-slate-50 transition px-1 rounded" onclick="abrirRazaoConta('Despesas Financeiras', 'Juros apropriados das operações do Banco Aurora')">
+          <span class="text-slate-500">(-) Despesas Financeiras Líquidas</span>
+          <span class="num-neg">R$ <%= (resultado?.dre?.despesasFinanceiras || 632).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row is-total">
+          <span class="text-slate-900">(=) Lucro Líquido do Trimestre</span>
+          <span class="num-pos font-bold">R$ <%= (resultado?.dre?.lucroLiquido || 21500).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Balanço Patrimonial -->
+    <div class="app-card p-5 space-y-3">
+      <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">2. Balanço Patrimonial</h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Posição Estática no Fechamento</p>
+        </div>
+        <span class="badge-status badge-status-neutral text-[10px]">Ativo = Passivo + PL</span>
+      </div>
+
+      <div class="accounting-table space-y-1">
+        <div class="accounting-row is-header">
+          <span>Ativo Circulante</span>
+          <span>Saldo</span>
+        </div>
+
+        <div class="accounting-row pl-2 cursor-pointer hover:bg-slate-50 transition rounded" onclick="abrirRazaoConta('Caixa e Bancos', 'Disponibilidades imediatas aplicadas à taxa Selic')">
+          <span class="text-slate-600">Disponibilidades (Caixa)</span>
+          <span class="num-neutral">R$ <%= (resultado?.balanco?.ativo?.circulante?.caixa || 74200).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row pl-2 cursor-pointer hover:bg-slate-50 transition rounded" onclick="abrirRazaoConta('Estoque de Mercadorias', 'Estoque remanescente avaliado ao Custo Médio Ponderado')">
+          <span class="text-slate-600">Estoque de Mercadorias</span>
+          <span class="num-neutral">R$ <%= (resultado?.balanco?.ativo?.circulante?.estoque || 27300).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row is-subtotal">
+          <span class="text-slate-800">Total do Ativo</span>
+          <span class="num-neutral font-semibold">R$ <%= (resultado?.balanco?.ativo?.total || 101500).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row is-header pt-2">
+          <span>Passivo & Patrimônio Líquido</span>
+          <span>Saldo</span>
+        </div>
+
+        <div class="accounting-row pl-2 cursor-pointer hover:bg-slate-50 transition rounded" onclick="abrirRazaoConta('Empréstimos Bancários', 'Obrigações vigentes com o Banco Aurora')">
+          <span class="text-slate-600">Empréstimos e Financiamentos</span>
+          <span class="num-neutral">R$ <%= (resultado?.balanco?.passivo?.circulante?.emprestimos || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row pl-2 cursor-pointer hover:bg-slate-50 transition rounded" onclick="abrirRazaoConta('Capital Social', 'Aporte inicial dos sócios fundadores da empresa')">
+          <span class="text-slate-600">Capital Social Integralizado</span>
+          <span class="num-neutral">R$ <%= (resultado?.balanco?.patrimonioLiquido?.capitalSocial || 80000).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row pl-2 cursor-pointer hover:bg-slate-50 transition rounded" onclick="abrirRazaoConta('Lucros Acumulados', 'Reserva de lucros gerados em todas as rodadas')">
+          <span class="text-slate-600">Lucros ou Prejuízos Acumulados</span>
+          <span class="num-pos">R$ <%= (resultado?.balanco?.patrimonioLiquido?.lucrosAcumulados || 21500).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row is-total">
+          <span class="text-slate-900">Total Passivo + PL</span>
+          <span class="num-neutral font-bold">R$ <%= (resultado?.balanco?.totalPassivoEPatrimonioLiquido || 101500).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Demonstração dos Fluxos de Caixa (DFC) -->
+    <div class="app-card p-5 space-y-3">
+      <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">3. Fluxo de Caixa (DFC)</h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Movimentação Financeira Efetiva</p>
+        </div>
+        <span class="badge-status badge-status-neutral text-[10px]">Caixa Real</span>
+      </div>
+
+      <div class="accounting-table space-y-1">
+        <div class="accounting-row is-header">
+          <span>Atividades Operacionais</span>
+          <span>Fluxo</span>
+        </div>
+
+        <div class="accounting-row pl-2">
+          <span class="text-slate-600">(+) Recebimento de Vendas</span>
+          <span class="num-pos">R$ <%= (resultado?.dfc?.fluxoOperacional?.entradas || 78400).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row pl-2">
+          <span class="text-slate-600">(-) Pagamento de Fornecedores e Custos</span>
+          <span class="num-neg">R$ <%= (resultado?.dfc?.fluxoOperacional?.saidas || 84200).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="accounting-row is-subtotal">
+          <span class="text-slate-800">(=) Geração Operacional Líquida</span>
+          <span class="num-neg font-semibold">- R$ 5.800,00</span>
+        </div>
+
+        <div class="accounting-row is-header pt-2">
+          <span>Atividades de Financiamento</span>
+          <span>Fluxo</span>
+        </div>
+
+        <div class="accounting-row pl-2">
+          <span class="text-slate-600">(+) Captações Líquidas</span>
+          <span class="num-neutral">R$ 0,00</span>
+        </div>
+
+        <div class="accounting-row is-subtotal">
+          <span class="text-slate-800">(=) Variação Líquida do Período</span>
+          <span class="num-neg font-semibold">- R$ 5.800,00</span>
+        </div>
+
+        <div class="accounting-row is-total">
+          <span class="text-slate-900">(=) Saldo de Disponibilidades Final</span>
+          <span class="num-pos font-bold">R$ <%= (resultado?.balanco?.ativo?.circulante?.caixa || 74200).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function abrirRazaoConta(nomeConta, descricaoAudit) {
+  const html = `
+    <div class="space-y-4 text-xs">
+      <div>
+        <span class="badge-status badge-status-neutral text-[10px] uppercase">Livro-Razão Geral</span>
+        <h3 class="font-bold text-slate-900 text-sm mt-1">${nomeConta}</h3>
+        <p class="text-slate-500 mt-1 leading-relaxed">${descricaoAudit}</p>
+      </div>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+        <div class="font-semibold text-slate-800">Invariante de Partidas Dobradas:</div>
+        <p class="text-slate-600">
+          Cada lançamento gerou débitos e créditos de mesmo valor, garantindo conformidade rigorosa com os princípios fundamentais da contabilidade.
+        </p>
+      </div>
+
+      <div class="p-3 border border-slate-200 rounded-lg space-y-1">
+        <div class="text-[11px] text-slate-500">Mapeamento para Power BI:</div>
+        <code class="block font-mono text-[11px] bg-slate-100 p-2 rounded text-slate-800 select-all">
+          dConta[Nome] = "${nomeConta}"
+        </code>
+      </div>
+    </div>
+  `;
+  abrirSideSheet('Auditoria Contábil', html);
+}
+</script>

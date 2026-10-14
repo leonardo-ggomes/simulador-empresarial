@@ -1,0 +1,705 @@
+/* Aurora Business Lab - Design System & UI Foundation
+   Direção de Arte: Minimalismo analítico, clareza editorial e precisão funcional.
+   Inspirado em produtos de alta maturidade (Linear, Stripe, Raycast). */
+
+:root {
+  /* Escala de Superfícies */
+  --bg-app: #F8FAFC;
+  --surface-default: #FFFFFF;
+  --surface-subtle: #F1F5F9;
+  --surface-hover: #F8FAFC;
+  --surface-active: #E2E8F0;
+
+  /* Bordas e Divisores */
+  --border-subtle: #E2E8F0;
+  --border-muted: #CBD5E1;
+  --border-focus: #0F172A;
+
+  /* Tipografia & Contraste */
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-tertiary: #64748B;
+  --text-disabled: #94A3B8;
+
+  /* Cores Semânticas Funcionais */
+  --accent-primary: #0F172A;
+  --accent-primary-hover: #1E293B;
+  --accent-brand: #2563EB;
+  
+  --success: #059669;
+  --success-subtle: #ECFDF5;
+  --success-border: #A7F3D0;
+
+  --warning: #D97706;
+  --warning-subtle: #FFFBEB;
+  --warning-border: #FDE68A;
+
+  --danger: #DC2626;
+  --danger-subtle: #FEF2F2;
+  --danger-border: #FECACA;
+
+  --info: #0284C7;
+  --info-subtle: #F0F9FF;
+  --info-border: #BAE6FD;
+
+  /* Métricas e Elevações */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-sheet: -8px 0 24px -4px rgba(15, 23, 42, 0.12), -2px 0 6px -2px rgba(15, 23, 42, 0.04);
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Números tabulares para precisão financeira e alinhamento */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Painel de Conteúdo e Contêineres de Dados */
+.app-card {
+  background-color: var(--surface-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-card:hover {
+  border-color: #CBD5E1;
+}
+
+/* Botões com Hierarquia Pura */
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: #FFFFFF;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-xs);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-primary-hover);
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.btn-secondary {
+  background-color: var(--surface-default);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-xs);
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--border-muted);
+  color: var(--text-primary);
+}
+
+.btn-secondary:active {
+  background-color: var(--surface-active);
+}
+
+/* Inputs e Seletores */
+.input-base {
+  background-color: var(--surface-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+/* Badges Semânticos Discretos */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.badge-status-neutral {
+  background-color: var(--surface-subtle);
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+}
+
+.badge-status-success {
+  background-color: var(--success-subtle);
+  color: var(--success);
+  border-color: var(--success-border);
+}
+
+.badge-status-warning {
+  background-color: var(--warning-subtle);
+  color: var(--warning);
+  border-color: var(--warning-border);
+}
+
+.badge-status-danger {
+  background-color: var(--danger-subtle);
+  color: var(--danger);
+  border-color: var(--danger-border);
+}
+
+/* Tabelas Analíticas Densas e Legíveis */
+.table-editorial {
+  width: 100%;
+  font-size: 0.8125rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-editorial th {
+  background-color: var(--surface-subtle);
+  color: var(--text-tertiary);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.table-editorial td {
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.table-editorial tr:last-child td {
+  border-bottom: none;
+}
+
+.table-editorial tr:hover td {
+  background-color: rgba(248, 250, 252, 0.8);
+}
+
+/* Side Sheet (Gaveta Lateral para Detalhes Contextuais) */
+.side-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.side-sheet-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.side-sheet-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--surface-default);
+  box-shadow: var(--shadow-sheet);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  border-left: 1px solid var(--border-subtle);
+}
+
+/* Acessibilidade: respeitar redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    transform: none !important;
+  }
+}
+
+/* Demonstrações Contábeis & Livro-Razão Profissional */
+.accounting-table {
+  width: 100%;
+  font-size: 0.8125rem;
+  border-collapse: collapse;
+}
+
+.accounting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.accounting-row:last-child {
+  border-bottom: none;
+}
+
+.accounting-row.is-header {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  padding-top: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.accounting-row.is-subtotal {
+  font-weight: 600;
+  color: var(--text-primary);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.45rem 0;
+  background-color: var(--surface-subtle);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: var(--radius-sm);
+  margin: 0.25rem 0;
+}
+
+.accounting-row.is-total {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  border-top: 1px solid var(--border-muted);
+  border-bottom: 2px double var(--border-muted);
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+}
+
+.num-neg {
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.num-pos {
+  color: var(--success);
+  font-variant-numeric: tabular-nums;
+}
+
+.num-neutral {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Abas Profissionais (Linear Pill Tabs) */
+.tab-pills-bar {
+  display: inline-flex;
+  background-color: var(--surface-subtle);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  gap: 0.25rem;
+  border: 1px solid var(--border-subtle);
+}
+
+.tab-pill {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tab-pill:hover {
+  color: var(--text-primary);
+}
+
+.tab-pill.active {
+  background-color: var(--surface-default);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-xs);
+}
+
+/* Grupos de Input com Prefixo / Sufixo */
+.input-addon-group {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-default);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-addon-group:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+.input-addon-affix {
+  display: flex;
+  align-items: center;
+  padding: 0 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  background-color: var(--surface-subtle);
+  border-right: 1px solid var(--border-subtle);
+  user-select: none;
+}
+
+.input-addon-group input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+  min-width: 0;
+}
+
+/* ==========================================================================
+   Painel de Tomada de Decisão Slim & Executivo
+   ========================================================================== */
+
+/* Trilho de Navegação de Diretorias Executivas */
+.decision-rail {
+  display: flex;
+  align-items: stretch;
+  background-color: var(--surface-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 0.25rem;
+  gap: 0.25rem;
+  box-shadow: var(--shadow-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.decision-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.decision-rail-btn {
+  flex: 1;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  user-select: none;
+  position: relative;
+  gap: 0.25rem;
+}
+
+.decision-rail-btn:hover {
+  background-color: var(--surface-subtle);
+}
+
+.decision-rail-btn.active {
+  background-color: var(--surface-subtle);
+  border-color: var(--border-muted);
+  box-shadow: var(--shadow-xs);
+}
+
+.decision-rail-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 2px;
+  background-color: var(--accent-primary);
+  border-radius: 2px;
+}
+
+/* Live Telemetry Pill no Botão do Trilho */
+.rail-telemetry-badge {
+  font-size: 0.65rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  padding: 0.125rem 0.375rem;
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 9999px;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  transition: all 0.15s ease;
+}
+
+.decision-rail-btn.active .rail-telemetry-badge {
+  background: rgba(15, 23, 42, 0.09);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Range Sliders Slim Analíticos */
+.slider-slim {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--surface-active);
+  outline: none;
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+
+.slider-slim:focus {
+  background: var(--border-muted);
+}
+
+.slider-slim::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface-default);
+  border: 2px solid var(--accent-primary);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, border-color 0.12s ease;
+  cursor: pointer;
+}
+
+.slider-slim::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  border-color: var(--accent-brand);
+}
+
+.slider-slim::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface-default);
+  border: 2px solid var(--accent-primary);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+/* Chips de Predefinições Rápidas (Presets) */
+.preset-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.preset-chip:hover {
+  background: var(--surface-default);
+  border-color: var(--border-muted);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.preset-chip:active {
+  transform: translateY(0);
+}
+
+/* Cards de Tipologia Metodológica Gartner (CDO) */
+.gartner-card {
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-default);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: none;
+}
+
+.gartner-card:hover {
+  border-color: var(--border-muted);
+  background-color: var(--surface-subtle);
+}
+
+.gartner-card.selected {
+  border-color: var(--accent-primary);
+  background-color: rgba(15, 23, 42, 0.02);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+/* Barra de Comando / Dock Flutuante Inferior */
+.decision-dock {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 30;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background-color: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md), 0 10px 20px -5px rgba(15, 23, 42, 0.08);
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+/* Micro-KPI Card Slim */
+.micro-kpi-card {
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* ==========================================================================
+   Gazeta Aurora - Jornal Econômico Digital (Investing & Financial Paper)
+   ========================================================================== */
+
+.font-editorial {
+  font-family: 'Newsreader', 'Playfair Display', Georgia, Cambria, serif;
+}
+
+/* Fita Contínua de Cotações Financeiras (Marquee Ticker) */
+.gazeta-ticker-bar {
+  background-color: #0B1120;
+  color: #E2E8F0;
+  border-bottom: 1px solid #1E293B;
+  overflow: hidden;
+  user-select: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.gazeta-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: tickerScroll 42s linear infinite;
+}
+
+.gazeta-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 1.25rem;
+  font-size: 0.72rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+/* Cabeçalho Masthead Clássico com Réguas Editoriais */
+.gazeta-masthead-rule {
+  border-top: 3px double #0F172A;
+  border-bottom: 1px solid #0F172A;
+}
+
+.gazeta-edition-line {
+  border-top: 1px solid #CBD5E1;
+  border-bottom: 1px solid #CBD5E1;
+}
+
+.gazeta-dropcap::first-letter {
+  float: left;
+  font-family: 'Newsreader', 'Playfair Display', Georgia, serif;
+  font-size: 3.5rem;
+  line-height: 0.8;
+  padding-top: 4px;
+  padding-right: 10px;
+  padding-bottom: 2px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+/* Cartões de Artigos com Borda Editorial */
+.gazeta-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.gazeta-card:hover {
+  border-color: #94A3B8;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+.gazeta-category-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.125rem 0.375rem;
+  border-radius: 2px;
+}
+
+
+

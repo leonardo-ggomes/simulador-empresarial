@@ -1,0 +1,378 @@
+<div class="max-w-4xl mx-auto space-y-6" data-sala-id="<%= currentRoom.id %>">
+
+  <!-- Cabeçalho & Esteira de Progresso -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+    <div>
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Etapa de Constituição</div>
+      <h1 class="text-xl font-bold tracking-tight text-slate-900 mt-0.5">Abertura e Registro Empresarial</h1>
+    </div>
+    <div class="text-xs text-slate-500">
+      Sala: <strong class="text-slate-800"><%= currentRoom.nome %></strong> <span class="font-mono text-slate-400">(<%= currentRoom.codigo %>)</span>
+    </div>
+  </div>
+
+  <% if (!currentTeam) { %>
+  <!-- Seção A: Escolha de Fundação ou Ingresso -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+    <!-- Opção 1: Fundar Empresa -->
+    <div class="app-card p-6 flex flex-col justify-between space-y-4">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">Fundar Nova Empresa</div>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          Como fundador inicial, você assume o papel de CEO e integraliza R$ 80.000,00 de capital social semente fornecido pelo Aurora Hub.
+        </p>
+
+        <form id="form-criar-equipe" onsubmit="handleFundarEquipe(event)" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Razão Social / Nome</label>
+            <div class="flex gap-2">
+              <input type="text" id="nova-equipe-nome" required placeholder="Ex: Logística Aurora Norte" class="input-base text-xs flex-1">
+              <button type="button" onclick="sugerirNomeFaker()" class="btn-secondary text-xs whitespace-nowrap" title="Sugerir nome via gerador de mercado">
+                Sugerir
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Setor de Mercado</label>
+            <select id="nova-equipe-setor" class="input-base text-xs bg-white">
+              <option value="Varejo & Bens de Consumo">Varejo & Bens de Consumo</option>
+              <option value="Alimentos & Bebidas">Alimentos & Bebidas</option>
+              <option value="Tecnologia & Equipamentos">Tecnologia & Equipamentos</option>
+              <option value="Moda & Vestuário">Moda & Vestuário</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full btn-primary py-2 text-xs font-semibold mt-2">
+            Fundar Empresa e Gerar CNPJ
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Opção 2: Entrar em Equipe Existente -->
+    <div class="app-card p-6 flex flex-col justify-between space-y-4">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">Ingressar em Empresa Fundada</div>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          Junte-se à diretoria de uma empresa já registrada por outros participantes desta turma:
+        </p>
+
+        <% if (typeof existingTeams !== 'undefined' && existingTeams.length > 0) { %>
+          <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+            <% existingTeams.forEach(t => { %>
+              <div class="p-3 rounded-lg border border-slate-200 flex items-center justify-between hover:bg-slate-50 transition">
+                <div>
+                  <div class="font-semibold text-xs text-slate-900"><%= t.nome %></div>
+                  <div class="text-[11px] text-slate-400"><%= t.membros.length %> sócio(s) • <%= t.setor %></div>
+                </div>
+                <% if (!t.confirmado) { %>
+                  <button onclick="handleEntrarEquipe('<%= t.id %>')" class="btn-secondary text-xs py-1 px-3">
+                    Ingressar
+                  </button>
+                <% } else { %>
+                  <span class="badge-status badge-status-neutral text-[10px]">Homologada</span>
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="py-10 text-center text-xs text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+            Nenhuma empresa fundada até o momento nesta turma.
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+  <% } else { %>
+
+  <!-- Seção B: Empresa Fundada - Identidade, Diretoria e Certidão Oficial -->
+  <div class="space-y-6">
+
+    <!-- Card 1: Metadados da Empresa -->
+    <div class="app-card p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900"><%= currentTeam.nome %></h2>
+          <p class="text-xs text-slate-500 italic mt-0.5">"<%= currentTeam.slogan %>"</p>
+        </div>
+        <div>
+          <% if (currentTeam.confirmado) { %>
+            <span class="badge-status badge-status-success font-semibold">Registro Homologado</span>
+          <% } else { %>
+            <span class="badge-status badge-status-warning font-semibold">Aguardando Homologação</span>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
+        <div>
+          <span class="block text-[10px] text-slate-400 uppercase font-sans font-semibold">CNPJ</span>
+          <span class="font-bold text-slate-900"><%= currentTeam.cnpj %></span>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-400 uppercase font-sans font-semibold">Capital Social</span>
+          <span class="font-bold text-emerald-700">R$ <%= currentTeam.capital_social.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-400 uppercase font-sans font-semibold">Setor</span>
+          <span class="font-sans font-medium text-slate-700"><%= currentTeam.setor %></span>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-400 uppercase font-sans font-semibold">Data Registro</span>
+          <span class="text-slate-700"><%= currentTeam.data_abertura %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Diretoria & Sócios (Tabela Editorial de Papéis) -->
+    <div class="app-card p-6 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Quadro de Sócios e Diretores</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Permissões: CEO (aprovação/envio final), CFO (finanças/crédito), CMO (comercial), COO (operações), CDO (dados).</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="table-editorial">
+          <thead>
+            <tr>
+              <th>Nome do Sócio</th>
+              <th>E-mail</th>
+              <th>Papel / Função</th>
+              <th class="text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% currentTeam.membros.forEach(m => { %>
+              <tr>
+                <td class="font-semibold text-slate-900"><%= m.nome %></td>
+                <td class="text-slate-500 font-mono text-[11px]"><%= m.email %></td>
+                <td>
+                  <span class="badge-status badge-status-neutral font-mono font-bold text-[10px] uppercase">
+                    <%= m.papel %>
+                  </span>
+                </td>
+                <td class="text-right">
+                  <% if (!currentTeam.confirmado && currentTeam.membros.some(x => x.usuario_id === currentUser.id && x.papel === 'CEO')) { %>
+                    <button onclick="abrirModalPapel('<%= m.usuario_id %>', '<%= m.nome %>')" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition">
+                      Reatribuir
+                    </button>
+                  <% } else { %>
+                    <span class="text-slate-300 text-xs">—</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Card 3: Certidão Oficial de Registro (Documento Corporativo) -->
+    <div class="app-card p-8 border border-slate-300 bg-white relative">
+      
+      <!-- Selo Visual Técnico -->
+      <div class="flex justify-between items-start pb-6 border-b border-slate-200">
+        <div>
+          <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Junta de Fomento de Negócios • Porto Aurora</div>
+          <div class="text-base font-extrabold text-slate-900 mt-0.5">Certidão de Registro Empresarial</div>
+        </div>
+        <span class="badge-status badge-status-warning text-[10px] font-bold tracking-wider uppercase">
+          Documento Fictício • Uso Educacional
+        </span>
+      </div>
+
+      <div class="py-6 space-y-3 text-xs font-mono">
+        <div class="flex justify-between py-1 border-b border-slate-100">
+          <span class="text-slate-500">NÚMERO DE INSCRIÇÃO:</span>
+          <span class="font-bold text-slate-900"><%= currentTeam.cnpj %></span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-100">
+          <span class="text-slate-500">RAZÃO SOCIAL:</span>
+          <span class="font-bold text-slate-900"><%= currentTeam.nome %> S.A.</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-100">
+          <span class="text-slate-500">CAPITAL SOCIAL INTEGRALIZADO:</span>
+          <span class="font-bold text-slate-900">R$ <%= currentTeam.capital_social.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+        </div>
+        <div class="flex justify-between py-1">
+          <span class="text-slate-500">SITUAÇÃO CADASTRAL:</span>
+          <span class="font-bold text-slate-900"><%= currentTeam.confirmado ? 'HOMOLOGADA (DADOS BLOQUEADOS)' : 'EM PROCESSO DE HOMOLOGAÇÃO' %></span>
+        </div>
+      </div>
+
+      <!-- Barra de Homologação Final do CEO -->
+      <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-xs text-slate-500">
+          Após homologada pelo CEO, o nome empresarial e o CNPJ ficam permanentemente bloqueados.
+        </p>
+
+        <% if (!currentTeam.confirmado) { %>
+          <% const ehCEO = currentTeam.membros.some(m => m.usuario_id === currentUser.id && m.papel === 'CEO'); %>
+          <% if (ehCEO) { %>
+            <button onclick="handleConfirmarEmpresa('<%= currentTeam.id %>')" class="btn-primary text-xs py-2 px-5 font-semibold">
+              Homologar e Bloquear Registro (CEO)
+            </button>
+          <% } else { %>
+            <div class="text-xs text-slate-500 italic">
+              Aguardando homologação final do CEO da empresa.
+            </div>
+          <% } %>
+        <% } else { %>
+          <a href="/sala/<%= currentRoom.id %>/briefing" class="btn-primary text-xs py-2 px-5 font-semibold">
+            Prosseguir para Briefing da Rodada ➔
+          </a>
+        <% } %>
+      </div>
+
+    </div>
+
+  </div>
+  <% } %>
+
+</div>
+
+<script>
+async function sugerirNomeFaker() {
+  try {
+    const res = await fetch('/api/equipes/sugerir');
+    const data = await res.json();
+    if (data.sucesso) {
+      document.getElementById('nova-equipe-nome').value = data.sugestao.nome;
+      showToast('Nome sugerido via mercado simulado.', 'info');
+    }
+  } catch (err) {
+    showToast('Falha ao obter sugestão.', 'erro');
+  }
+}
+
+async function handleFundarEquipe(e) {
+  e.preventDefault();
+  const salaId = document.querySelector('[data-sala-id]').dataset.salaId;
+  const nome = document.getElementById('nova-equipe-nome').value.trim();
+  const setor = document.getElementById('nova-equipe-setor').value;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  try {
+    const res = await fetch('/api/equipes/criar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ salaId, nome, setor })
+    });
+    const data = await res.json();
+    if (data.sucesso) {
+      showToast('Empresa registrada com sucesso.', 'sucesso');
+      setTimeout(() => window.location.reload(), 400);
+    } else {
+      showToast(data.erro || 'Falha ao registrar empresa.', 'erro');
+    }
+  } catch (err) {
+    showToast('Falha na comunicação.', 'erro');
+  }
+}
+
+async function handleEntrarEquipe(equipeId) {
+  const salaId = document.querySelector('[data-sala-id]').dataset.salaId;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  try {
+    const res = await fetch('/api/equipes/entrar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ salaId, equipeId, papelDesejado: 'CDO' })
+    });
+    const data = await res.json();
+    if (data.sucesso) {
+      showToast('Ingresso confirmado na empresa.', 'sucesso');
+      setTimeout(() => window.location.reload(), 400);
+    } else {
+      showToast(data.erro || 'Falha ao ingressar.', 'erro');
+    }
+  } catch (err) {
+    showToast('Falha na comunicação.', 'erro');
+  }
+}
+
+async function handleConfirmarEmpresa(equipeId) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  try {
+    const res = await fetch(`/api/equipes/${equipeId}/confirmar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken }
+    });
+    const data = await res.json();
+    if (data.sucesso) {
+      showToast('Empresa homologada. Dados travados.', 'sucesso');
+      setTimeout(() => window.location.reload(), 400);
+    } else {
+      showToast(data.erro || 'Falha na homologação.', 'erro');
+    }
+  } catch (err) {
+    showToast('Falha na comunicação.', 'erro');
+  }
+}
+
+function abrirModalPapel(alvoUsuarioId, nome) {
+  const html = `
+    <div class="space-y-4">
+      <p class="text-xs text-slate-600">Selecione a função de <strong>${nome}</strong> no quadro de diretores:</p>
+      <div class="space-y-2">
+        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
+          <input type="radio" name="novo-papel" value="CEO" class="text-slate-900">
+          <div><strong class="text-slate-900">CEO</strong> — Aprovação e envio definitivo de decisões</div>
+        </label>
+        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
+          <input type="radio" name="novo-papel" value="CFO" class="text-slate-900">
+          <div><strong class="text-slate-900">CFO</strong> — Gestão de caixa, crédito e liquidez</div>
+        </label>
+        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
+          <input type="radio" name="novo-papel" value="CMO" class="text-slate-900">
+          <div><strong class="text-slate-900">CMO</strong> — Precificação e estratégias comerciais</div>
+        </label>
+        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
+          <input type="radio" name="novo-papel" value="COO" class="text-slate-900">
+          <div><strong class="text-slate-900">COO</strong> — Compras, suprimentos e armazenagem</div>
+        </label>
+        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
+          <input type="radio" name="novo-papel" value="CDO" checked class="text-slate-900">
+          <div><strong class="text-slate-900">CDO</strong> — Engenharia e análise de dados</div>
+        </label>
+      </div>
+      <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+        <button type="button" onclick="fecharSideSheet()" class="btn-secondary text-xs">Cancelar</button>
+        <button type="button" onclick="salvarPapel('${alvoUsuarioId}')" class="btn-primary text-xs">Confirmar Atribuição</button>
+      </div>
+    </div>
+  `;
+  abrirSideSheet(`Reatribuir Função — ${nome}`, html);
+}
+
+async function salvarPapel(alvoUsuarioId) {
+  const selecionado = document.querySelector('input[name="novo-papel"]:checked')?.value;
+  if (!selecionado) return;
+
+  const equipeId = '<%= currentTeam ? currentTeam.id : "" %>';
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  try {
+    const res = await fetch(`/api/equipes/${equipeId}/papeis`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ alvoUsuarioId, papéis: [selecionado] })
+    });
+    const data = await res.json();
+    if (data.sucesso) {
+      fecharSideSheet();
+      showToast('Função atualizada com sucesso.', 'sucesso');
+      setTimeout(() => window.location.reload(), 400);
+    } else {
+      showToast(data.erro || 'Falha ao reatribuir papel.', 'erro');
+    }
+  } catch (err) {
+    showToast('Falha na comunicação.', 'erro');
+  }
+}
+</script>

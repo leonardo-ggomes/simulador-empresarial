@@ -1,0 +1,526 @@
+<div class="space-y-6" data-sala-id="<%= currentRoom.id %>" data-equipe-id="<%= currentTeam.id %>" data-rodada="<%= currentRoom.rodada_atual %>">
+
+  <!-- Header do Laboratório de Dados -->
+  <div class="app-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="space-y-1.5">
+      <div class="flex items-center gap-2">
+        <span class="badge-status badge-status-neutral font-semibold">
+          Laboratório Metodológico
+        </span>
+        <span class="badge-status badge-status-neutral font-semibold">
+          <%= currentTeam.nome %>
+        </span>
+      </div>
+      <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+        Laboratório de Análise Empresarial
+      </h1>
+      <p class="text-xs text-slate-500 max-w-2xl">
+        Escada de maturidade analítica: Descritiva (o que aconteceu), Diagnóstica (por que aconteceu), Preditiva (o que acontecerá) e Prescritiva (o que devemos fazer).
+      </p>
+    </div>
+
+    <!-- Navegação em Abas (Linear Pill Tabs) -->
+    <div class="tab-pills-bar overflow-x-auto w-full md:w-auto">
+      <button id="btn-tab-descritiva" onclick="switchAnalyticsTab('descritiva')" class="tab-pill active">
+        1. Descritiva
+      </button>
+      <button id="btn-tab-diagnostica" onclick="switchAnalyticsTab('diagnostica')" class="tab-pill">
+        2. Diagnóstica
+      </button>
+      <button id="btn-tab-preditiva" onclick="switchAnalyticsTab('preditiva')" class="tab-pill">
+        3. Preditiva
+      </button>
+      <button id="btn-tab-prescritiva" onclick="switchAnalyticsTab('prescritiva')" class="tab-pill">
+        4. Prescritiva
+      </button>
+    </div>
+  </div>
+
+  <!-- Bloqueio Pedagógico Quando o Professor Força o Power BI -->
+  <% if (typeof bloqueadoPeloProfessor !== 'undefined' && bloqueadoPeloProfessor) { %>
+    <div class="app-card p-8 md:p-12 text-center border-l-4 border-l-blue-600 space-y-4">
+      <div class="max-w-xl mx-auto space-y-2">
+        <span class="badge-status badge-status-neutral font-semibold uppercase text-[10px]">
+          Diretriz Pedagógica Ativa
+        </span>
+        <h2 class="text-lg font-bold text-slate-900">Construção Mandatória no Microsoft Power BI</h2>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          O professor configurou a sala para que as análises econômicas e a tomada de decisão ocorram obrigatoriamente através do <strong>Microsoft Power BI Desktop</strong>. O visualizador web interno foi desativado para estimular a engenharia de dados real.
+        </p>
+      </div>
+
+      <div class="pt-2">
+        <a href="/sala/<%= currentRoom.id %>/powerbi" class="btn-primary text-xs py-2.5 px-5 font-semibold">
+          Acessar Central de Integração Power BI (API, XLS, CSV, TXT, SQL) →
+        </a>
+      </div>
+    </div>
+  <% } else { %>
+
+  <!-- ABA 1: ANALISE DESCRITIVA -->
+  <div id="tab-descritiva" class="space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Gráfico 1: Vendas e Receita Líquida -->
+      <div class="app-card p-5 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Histórico de Receita e Vendas</h2>
+          <span class="text-[11px] text-slate-400">Trimestres</span>
+        </div>
+        <div class="h-64">
+          <canvas id="chart-receita-vendas"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 2: Margens Contábeis -->
+      <div class="app-card p-5 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Evolução das Margens (%)</h2>
+          <span class="text-[11px] text-slate-400">Bruta vs Líquida</span>
+        </div>
+        <div class="h-64">
+          <canvas id="chart-margens"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 3: Market Share -->
+      <div class="app-card p-5 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Market Share vs. Concorrentes</h2>
+          <span class="text-[11px] text-slate-400">% de Mercado</span>
+        </div>
+        <div class="h-64">
+          <canvas id="chart-market-share"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 4: Endividamento e Liquidez -->
+      <div class="app-card p-5 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Solvência & Caixa Final</h2>
+          <span class="text-[11px] text-slate-400">Disponibilidades</span>
+        </div>
+        <div class="h-64">
+          <canvas id="chart-solvencia"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tabela Descritiva & Exportação CSV -->
+    <div class="app-card overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Séries Históricas da Empresa</h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Dados consolidados do Livro-Razão e de Operações</p>
+        </div>
+        <button onclick="exportarTabelaCSV()" class="btn-secondary text-xs">
+          Exportar CSV
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table id="tabela-historica" class="table-editorial">
+          <thead>
+            <tr>
+              <th>Rodada</th>
+              <th class="text-right">Preço</th>
+              <th class="text-right">Un. Vendidas</th>
+              <th class="text-right">Vendas Perdidas</th>
+              <th class="text-right">Receita Bruta</th>
+              <th class="text-right">CMV</th>
+              <th class="text-right">EBITDA</th>
+              <th class="text-right">Lucro Líquido</th>
+              <th class="text-right">Caixa Final</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-series-historicas">
+            <!-- Populado dinamicamente via JS com dados do histórico -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABA 2: ANALISE DIAGNÓSTICA -->
+  <div id="tab-diagnostica" class="space-y-6 hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Decomposição de Lucro: Por que o lucro variou? -->
+      <div class="app-card p-5 space-y-4">
+        <div class="pb-2 border-b border-slate-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Decomposição de Variância ("Por que o Lucro Variou?")</h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Isolamento dos fatores de variação de resultado entre as duas últimas rodadas:</p>
+        </div>
+
+        <div id="decomposicao-lucro-container" class="space-y-2 text-xs">
+          <div class="p-3 rounded-lg border border-slate-200 bg-slate-50/50 flex justify-between items-center">
+            <span class="text-slate-600">Efeito Preço Praticado:</span>
+            <span id="var-efeito-preco" class="font-semibold text-emerald-600 tabular-nums">+ R$ 3.200,00</span>
+          </div>
+          <div class="p-3 rounded-lg border border-slate-200 bg-slate-50/50 flex justify-between items-center">
+            <span class="text-slate-600">Efeito Volume de Vendas:</span>
+            <span id="var-efeito-volume" class="font-semibold text-rose-600 tabular-nums">- R$ 1.850,00</span>
+          </div>
+          <div class="p-3 rounded-lg border border-slate-200 bg-slate-50/50 flex justify-between items-center">
+            <span class="text-slate-600">Efeito Custo de Insumos (Câmbio):</span>
+            <span id="var-efeito-custo" class="font-semibold text-rose-600 tabular-nums">- R$ 1.200,00</span>
+          </div>
+          <div class="p-3 rounded-lg border border-slate-200 bg-slate-50/50 flex justify-between items-center">
+            <span class="text-slate-600">Efeito Despesas Operacionais e Marketing:</span>
+            <span id="var-efeito-marketing" class="font-semibold text-slate-700 tabular-nums">- R$ 500,00</span>
+          </div>
+          <div class="p-3 rounded-lg border border-slate-300 bg-slate-100 flex justify-between items-center font-bold">
+            <span class="text-slate-900">Variação Líquida de Resultado:</span>
+            <span id="var-liquida-total" class="text-slate-900 tabular-nums">- R$ 350,00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparativo com a Média do Mercado -->
+      <div class="app-card p-5 space-y-4">
+        <div class="pb-2 border-b border-slate-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Comparativo com a Média Setorial</h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Benchmark anônimo de concorrência em Porto Aurora:</p>
+        </div>
+        <div class="h-64">
+          <canvas id="chart-benchmark-mercado"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ABA 3: ANALISE PREDITIVA -->
+  <div id="tab-preditiva" class="space-y-6 hidden">
+    <div class="app-card p-5 space-y-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2 border-b border-slate-100 gap-4">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">
+            Modelagem Preditiva de Demanda (Rodada <%= currentRoom.rodada_atual %>)
+          </h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">
+            Ajuste de séries temporais e cálculo do erro percentual absoluto médio (MAPE):
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-semibold text-slate-600" for="select-metodo-preditivo">Método:</label>
+          <select id="select-metodo-preditivo" onchange="atualizarModeloPreditivo()" class="input-base text-xs font-medium py-1.5 px-3 bg-white w-auto">
+            <option value="media_movel">Média Móvel (3 períodos)</option>
+            <option value="suavizacao_exp" selected>Suavização Exponencial (α = 0.35)</option>
+            <option value="regressao_linear">Regressão Linear Simples (Tendência)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-2">
+        <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/50">
+          <div class="text-[10px] uppercase font-bold text-slate-500">Demanda Projetada</div>
+          <div id="pred-valor-demanda" class="text-xl font-bold text-slate-900 mt-1 tabular-nums">1.120 un.</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Ponto central da estimativa</div>
+        </div>
+
+        <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/50">
+          <div class="text-[10px] uppercase font-bold text-slate-500">Intervalo de Confiança (95%)</div>
+          <div id="pred-intervalo-confianca" class="text-xl font-bold text-slate-900 mt-1 tabular-nums">1.040 a 1.200 un.</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">± 1.96 desvios padrão</div>
+        </div>
+
+        <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/50">
+          <div class="text-[10px] uppercase font-bold text-slate-500">Erro Histórico (MAPE)</div>
+          <div id="pred-mape-erro" class="text-xl font-bold text-slate-900 mt-1 tabular-nums">4.8%</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Mean Absolute Percentage Error</div>
+        </div>
+      </div>
+
+      <div class="h-64 mt-4">
+        <canvas id="chart-projecao-demanda"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABA 4: ANALISE PRESCRITIVA -->
+  <div id="tab-prescritiva" class="space-y-6 hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Simulador What-If (E se?) -->
+      <div class="lg:col-span-2 app-card p-5 space-y-4">
+        <div class="pb-2 border-b border-slate-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Simulador de Sensibilidade "E Se?" (What-If)</h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">
+            Ajuste as variáveis e simule instantaneamente o impacto na receita, ruptura e lucro:
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-slate-700" for="sim-slider-preco">Preço Simulado (R$)</label>
+            <input type="range" id="sim-slider-preco" min="50" max="120" step="1" value="82" oninput="executarWhatIf()" class="w-full accent-slate-900">
+            <div class="flex justify-between text-[11px] text-slate-500 mt-1 font-mono">
+              <span>R$ 50</span>
+              <span id="sim-val-preco" class="font-bold text-slate-900">R$ 82,00</span>
+              <span>R$ 120</span>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-slate-700" for="sim-slider-mkt">Marketing Simulado (R$)</label>
+            <input type="range" id="sim-slider-mkt" min="500" max="15000" step="500" value="3000" oninput="executarWhatIf()" class="w-full accent-slate-900">
+            <div class="flex justify-between text-[11px] text-slate-500 mt-1 font-mono">
+              <span>R$ 500</span>
+              <span id="sim-val-mkt" class="font-bold text-slate-900">R$ 3.000</span>
+              <span>R$ 15k</span>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-slate-700" for="sim-slider-est">Estoque Programado (un.)</label>
+            <input type="range" id="sim-slider-est" min="500" max="2500" step="50" value="1100" oninput="executarWhatIf()" class="w-full accent-slate-900">
+            <div class="flex justify-between text-[11px] text-slate-500 mt-1 font-mono">
+              <span>500 un</span>
+              <span id="sim-val-est" class="font-bold text-slate-900">1.100 un</span>
+              <span>2.500 un</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/50 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+          <div>
+            <div class="text-[10px] uppercase font-bold text-slate-400">Demanda Estimada</div>
+            <div id="sim-res-demanda" class="text-base font-bold text-slate-900 mt-1 tabular-nums">1.085 un.</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase font-bold text-slate-400">Receita Estimada</div>
+            <div id="sim-res-receita" class="text-base font-bold text-slate-900 mt-1 tabular-nums">R$ 88.970</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase font-bold text-slate-400">Ruptura / Sobra</div>
+            <div id="sim-res-ruptura" class="text-base font-bold text-emerald-600 mt-1 tabular-nums">+15 un.</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase font-bold text-slate-400">Lucro Operacional</div>
+            <div id="sim-res-lucro" class="text-base font-bold text-slate-900 mt-1 tabular-nums">R$ 21.400</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recomendações do Consultor Dado -->
+      <div class="app-card p-5 space-y-4 flex flex-col justify-between">
+        <div>
+          <div class="pb-2 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Otimizador Prescritivo</h2>
+            <span class="badge-status badge-status-neutral text-[10px]">Consultoria</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-2 mb-3">
+            Algoritmo de balanceamento de margem e atração de demanda:
+          </p>
+          <div id="recomendacao-box" class="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 text-xs text-slate-700 leading-relaxed space-y-2">
+            <div>
+              <strong>Recomendação de Preço:</strong> Fixar em <strong>R$ 81,50</strong> (+1.8% vs. mercado) com marketing de <strong>R$ 2.800,00</strong>.
+            </div>
+            <div class="text-[11px] text-slate-500">
+              <strong>Risco:</strong> Baixo a moderado. Margem unitária compensa leve recuo de elasticidade.
+            </div>
+          </div>
+        </div>
+
+        <button onclick="solicitarNovaRecomendacao()" class="w-full btn-secondary py-2 text-xs font-medium">
+          Recalcular Parâmetros Recomendados
+        </button>
+      </div>
+
+    </div>
+  </div>
+  <% } %>
+
+</div>
+
+<script>
+const historicoMock = [
+  { rodada: 1, preco: 80.0, vendidas: 980, perdidas: 0, receita: 78400, cmv: 31360, ebitda: 22040, lucro: 21500, caixa: 74200, share: 25.0, margemBruta: 60.0, margemLiq: 27.4, endividamento: 0.12 },
+  { rodada: 2, preco: 82.0, vendidas: 1040, perdidas: 20, receita: 85280, cmv: 34320, ebitda: 25100, lucro: 24200, caixa: 89100, share: 26.2, margemBruta: 59.7, margemLiq: 28.3, endividamento: 0.10 }
+];
+
+function switchAnalyticsTab(tab) {
+  ['descritiva', 'diagnostica', 'preditiva', 'prescritiva'].forEach(t => {
+    const el = document.getElementById(`tab-${t}`);
+    if (el) el.classList.add('hidden');
+    const btn = document.getElementById(`btn-tab-${t}`);
+    if (btn) btn.classList.remove('active');
+  });
+
+  const targetEl = document.getElementById(`tab-${tab}`);
+  if (targetEl) targetEl.classList.remove('hidden');
+  const activeBtn = document.getElementById(`btn-tab-${tab}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  if (window.auroraSocket && window.auroraSocket.connected) {
+    const salaId = document.querySelector('[data-sala-id]')?.dataset.salaId;
+    const equipeId = document.querySelector('[data-equipe-id]')?.dataset.equipeId;
+    const rodada = parseInt(document.querySelector('[data-rodada]')?.dataset.rodada, 10);
+    window.auroraSocket.emit('analise:registrar_uso', {
+      salaId,
+      equipeId,
+      rodada,
+      tipoAnalise: tab,
+      detalhes: { timestamp: new Date().toISOString() }
+    });
+  }
+}
+
+function inicializarGraficosAnalytics() {
+  if (typeof Chart === 'undefined') return;
+  const labels = ['Rodada 1', 'Rodada 2'];
+
+  const chartEl1 = document.getElementById('chart-receita-vendas');
+  if (chartEl1) {
+    new Chart(chartEl1, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Receita Bruta (R$)', data: [78400, 85280], backgroundColor: '#0F172A', borderRadius: 4 },
+          { label: 'CMV (R$)', data: [31360, 34320], backgroundColor: '#94A3B8', borderRadius: 4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  const chartEl2 = document.getElementById('chart-margens');
+  if (chartEl2) {
+    new Chart(chartEl2, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Margem Bruta (%)', data: [60.0, 59.7], borderColor: '#059669', tension: 0.2 },
+          { label: 'Margem Líquida (%)', data: [27.4, 28.3], borderColor: '#2563EB', tension: 0.2 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  const chartEl3 = document.getElementById('chart-market-share');
+  if (chartEl3) {
+    new Chart(chartEl3, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{ label: 'Market Share (%)', data: [25.0, 26.2], borderColor: '#0F172A', backgroundColor: 'rgba(15, 23, 42, 0.05)', fill: true, tension: 0.2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  const chartEl4 = document.getElementById('chart-solvencia');
+  if (chartEl4) {
+    new Chart(chartEl4, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Caixa Final (R$)', data: [74200, 89100], backgroundColor: '#059669', borderRadius: 4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  const chartEl5 = document.getElementById('chart-benchmark-mercado');
+  if (chartEl5) {
+    new Chart(chartEl5, {
+      type: 'radar',
+      data: {
+        labels: ['Preço Médio', 'Invest. Marketing', 'Margem Bruta', 'Giro Estoque', 'Market Share'],
+        datasets: [
+          { label: 'Sua Empresa', data: [82, 75, 88, 70, 85], borderColor: '#2563EB', backgroundColor: 'rgba(37, 99, 235, 0.15)' },
+          { label: 'Média Mercado', data: [80, 60, 75, 65, 70], borderColor: '#94A3B8', backgroundColor: 'rgba(148, 163, 184, 0.15)' }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  const chartEl6 = document.getElementById('chart-projecao-demanda');
+  if (chartEl6) {
+    new Chart(chartEl6, {
+      type: 'line',
+      data: {
+        labels: ['R1 (Real)', 'R2 (Real)', 'R3 (Projetado)'],
+        datasets: [
+          { label: 'Demanda', data: [980, 1040, 1120], borderColor: '#0F172A', borderDash: [0, 0, 4, 4], tension: 0.2 },
+          { label: 'Limite Superior (95%)', data: [980, 1040, 1200], borderColor: '#059669', borderDash: [2, 2] },
+          { label: 'Limite Inferior (95%)', data: [980, 1040, 1040], borderColor: '#DC2626', borderDash: [2, 2] }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  const tbody = document.getElementById('tbody-series-historicas');
+  if (tbody) {
+    tbody.innerHTML = historicoMock.map(h => `
+      <tr>
+        <td class="font-semibold text-slate-900">Rodada ${h.rodada}</td>
+        <td class="text-right tabular-nums">R$ ${h.preco.toFixed(2)}</td>
+        <td class="text-right tabular-nums">${h.vendidas} un</td>
+        <td class="text-right tabular-nums ${h.perdidas > 0 ? 'text-rose-600 font-semibold' : 'text-slate-400'}">${h.perdidas} un</td>
+        <td class="text-right tabular-nums font-semibold text-slate-900">R$ ${h.receita.toLocaleString('pt-BR')}</td>
+        <td class="text-right tabular-nums text-slate-600">R$ ${h.cmv.toLocaleString('pt-BR')}</td>
+        <td class="text-right tabular-nums text-slate-600">R$ ${h.ebitda.toLocaleString('pt-BR')}</td>
+        <td class="text-right tabular-nums font-semibold ${h.lucro >= 0 ? 'text-emerald-700' : 'text-rose-600'}">R$ ${h.lucro.toLocaleString('pt-BR')}</td>
+        <td class="text-right tabular-nums font-bold text-slate-900">R$ ${h.caixa.toLocaleString('pt-BR')}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+function executarWhatIf() {
+  const preco = parseFloat(document.getElementById('sim-slider-preco').value);
+  const mkt = parseFloat(document.getElementById('sim-slider-mkt').value);
+  const est = parseInt(document.getElementById('sim-slider-est').value, 10);
+
+  document.getElementById('sim-val-preco').textContent = `R$ ${preco.toFixed(2)}`;
+  document.getElementById('sim-val-mkt').textContent = `R$ ${mkt.toLocaleString('pt-BR')}`;
+  document.getElementById('sim-val-est').textContent = `${est.toLocaleString('pt-BR')} un`;
+
+  const fatorP = Math.pow(preco / 80, -1.35);
+  const fatorM = 1.0 + Math.log1p(mkt / 1500) * 0.35;
+  const demandaEst = Math.round(1000 * fatorP * fatorM);
+  const vendidas = Math.min(demandaEst, est);
+  const receita = vendidas * preco;
+  const cmv = vendidas * 36;
+  const lucroOp = Math.round(receita - cmv - mkt - 16000);
+
+  document.getElementById('sim-res-demanda').textContent = `${demandaEst} un.`;
+  document.getElementById('sim-res-receita').textContent = `R$ ${receita.toLocaleString('pt-BR')}`;
+  document.getElementById('sim-res-ruptura').textContent = est >= demandaEst ? `+${est - demandaEst} un` : `-${demandaEst - est} un (ruptura)`;
+  document.getElementById('sim-res-ruptura').className = `text-base font-bold mt-1 tabular-nums ${est >= demandaEst ? 'text-emerald-600' : 'text-rose-600'}`;
+  document.getElementById('sim-res-lucro').textContent = `R$ ${lucroOp.toLocaleString('pt-BR')}`;
+}
+
+function exportarTabelaCSV() {
+  let csv = 'Rodada;Preco;Vendidas;Perdidas;Receita;CMV;EBITDA;LucroLiquido;Caixa\n';
+  historicoMock.forEach(h => {
+    csv += `${h.rodada};${h.preco};${h.vendidas};${h.perdidas};${h.receita};${h.cmv};${h.ebitda};${h.lucro};${h.caixa}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `aurora_series_historicas_${Date.now()}.csv`;
+  a.click();
+  showToast('Exportação CSV gerada com sucesso!', 'sucesso');
+}
+
+function solicitarNovaRecomendacao() {
+  showToast('Parâmetros analíticos atualizados.', 'sucesso');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  inicializarGraficosAnalytics();
+});
+</script>

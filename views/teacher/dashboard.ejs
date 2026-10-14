@@ -1,0 +1,292 @@
+<div class="space-y-6" data-sala-id="<%= currentRoom.id %>" data-sala-codigo="<%= currentRoom.codigo %>">
+
+  <!-- Header do Centro de Controle do Facilitador -->
+  <div class="app-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="space-y-1.5">
+      <div class="flex items-center gap-2">
+        <span class="badge-status badge-status-neutral font-semibold">
+          Console de Mediação Docente
+        </span>
+        <span class="badge-status badge-status-neutral font-mono font-bold">
+          Código: <%= currentRoom.codigo %>
+        </span>
+        <span class="badge-status <%= currentRoom.status === 'em_andamento' ? 'badge-status-success' : 'badge-status-warning' %> font-semibold">
+          ● Status: <%= currentRoom.status === 'em_andamento' ? 'Em Andamento' : (currentRoom.status === 'aberta' ? 'Aguardando Início' : 'Encerrada') %>
+        </span>
+      </div>
+      <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+        Centro de Controle da Simulação
+      </h1>
+      <p class="text-xs text-slate-500 max-w-2xl">
+        Coordene a progressão das rodadas trimestrais, monitore o progresso das diretorias e audite a qualidade metodológica dos relatórios.
+      </p>
+    </div>
+
+    <!-- Controles de Rodada -->
+    <div class="flex items-center gap-2.5">
+      <% if (currentRoom.status === 'aberta') { %>
+        <button onclick="handleIniciarSimulacao()" class="btn-primary text-xs font-semibold">
+          Iniciar Simulação (Rodada 1) →
+        </button>
+      <% } else if (currentRoom.status === 'em_andamento') { %>
+        <button onclick="handleFecharRodada()" class="btn-primary bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold">
+          Fechar Rodada <%= currentRoom.rodada_atual %> e Processar Resultados
+        </button>
+      <% } else { %>
+        <span class="badge-status badge-status-neutral text-xs">
+          Simulação Concluída (12 Rodadas)
+        </span>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Coluna 1 & 2: Tabela Profissional de Equipes e Status de Submissão -->
+    <div class="lg:col-span-2 app-card overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Empresas Participantes & Governança</h2>
+          <p class="text-[11px] text-slate-400 mt-0.5"><%= equipes.length %> organizações cadastradas na sala</p>
+        </div>
+        <span class="badge-status badge-status-neutral text-[10px]">Tempo Real</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="table-editorial">
+          <thead>
+            <tr>
+              <th>Organização / Setor</th>
+              <th>CNPJ Fictício</th>
+              <th>Quadro Societário</th>
+              <th>Status Trimestral</th>
+              <th class="text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (equipes && equipes.length > 0) { %>
+              <% equipes.forEach(e => { %>
+                <% const dec = decisoes.find(d => d.equipe_id === e.id); %>
+                <tr>
+                  <td>
+                    <div class="font-semibold text-slate-900"><%= e.nome %></div>
+                    <div class="text-[11px] text-slate-400"><%= e.setor %></div>
+                  </td>
+                  <td class="font-mono text-xs text-slate-600">
+                    <%= e.cnpj %>
+                  </td>
+                  <td class="text-xs text-slate-600">
+                    <span class="font-medium text-slate-900"><%= e.membros.length %></span> diretores
+                  </td>
+                  <td>
+                    <% if (dec && dec.status === 'enviada') { %>
+                      <span class="badge-status badge-status-success font-semibold text-[10px]">
+                        ● Homologada pelo CEO
+                      </span>
+                    <% } else if (dec && dec.status === 'rascunho') { %>
+                      <span class="badge-status badge-status-warning font-semibold text-[10px]">
+                        ○ Rascunho em Edição
+                      </span>
+                    <% } else { %>
+                      <span class="badge-status badge-status-neutral text-slate-400 text-[10px]">
+                        Pendente
+                      </span>
+                    <% } %>
+                  </td>
+                  <td class="text-right">
+                    <button type="button" onclick="abrirEquipeDetalhes('<%= escape(JSON.stringify(e)) %>', '<%= escape(JSON.stringify(dec || null)) %>')" class="btn-secondary text-[11px] py-1 px-2.5">
+                      Inspecionar
+                    </button>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" class="text-center py-8 text-xs text-slate-400">
+                  Nenhuma equipe cadastrada nesta sala. Convide os alunos compartilhando o código <strong><%= currentRoom.codigo %></strong>.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Coluna 3: Configurações Pedagógicas & Critérios de Avaliação -->
+    <div class="space-y-6">
+
+      <!-- Foco Pedagógico em Power BI -->
+      <div class="app-card p-5 space-y-3">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Estratégia Pedagógica</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Foco de Análise de Dados</p>
+          </div>
+          <span class="badge-status <%= currentRoom.configuracoes?.habilitarLaboratorioAnalitico ? 'badge-status-neutral' : 'badge-status-success' %> text-[10px]">
+            <%= currentRoom.configuracoes?.habilitarLaboratorioAnalitico ? 'Web Ativo' : 'Power BI Exclusivo' %>
+          </span>
+        </div>
+
+        <div class="space-y-2 text-xs text-slate-600 leading-relaxed">
+          <p>
+            <% if (!currentRoom.configuracoes?.habilitarLaboratorioAnalitico) { %>
+              O laboratório web interno está <strong class="text-slate-900">desativado</strong>. Os alunos são obrigatoriamente incentivados a conectar o <strong>Power BI Desktop</strong> via API Web, XLS, CSV ou SQL.
+            <% } else { %>
+              O laboratório web está <strong class="text-slate-900">habilitado</strong>. Os alunos podem visualizar gráficos preliminares dentro da própria aplicação.
+            <% } %>
+          </p>
+
+          <button onclick="handleToggleLaboratorio(<%= !currentRoom.configuracoes?.habilitarLaboratorioAnalitico %>)" class="w-full btn-secondary text-xs mt-2 font-medium">
+            <%= currentRoom.configuracoes?.habilitarLaboratorioAnalitico ? 'Restringir para Power BI Obrigatório' : 'Liberar Laboratório Web para Alunos' %>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pesos Oficiais do Ranking -->
+      <div class="app-card p-5 space-y-3">
+        <div class="pb-3 border-b border-slate-100">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Critérios de Avaliação</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">Composição ponderada do ranking</p>
+        </div>
+
+        <div class="space-y-2 text-xs text-slate-600">
+          <div class="flex justify-between items-center py-1 border-b border-slate-100">
+            <span class="font-medium text-slate-800">1. Desempenho Financeiro (EVA / Caixa)</span>
+            <span class="font-semibold text-slate-900 tabular-nums">50%</span>
+          </div>
+          <div class="flex justify-between items-center py-1 border-b border-slate-100">
+            <span class="font-medium text-slate-800">2. Mercado & Market Share</span>
+            <span class="font-semibold text-slate-900 tabular-nums">20%</span>
+          </div>
+          <div class="flex justify-between items-center py-1">
+            <span class="font-medium text-slate-800">3. Maturidade Analítica (Hipótese & Evidência)</span>
+            <span class="font-semibold text-slate-900 tabular-nums">30%</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function abrirEquipeDetalhes(equipeEscaped, decEscaped) {
+  try {
+    const equipe = JSON.parse(unescape(equipeEscaped));
+    const dec = JSON.parse(unescape(decEscaped));
+
+    let membrosHtml = equipe.membros.map(m => `
+      <div class="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-100 text-xs">
+        <div>
+          <div class="font-semibold text-slate-900">${m.nome}</div>
+          <div class="text-[11px] text-slate-400">${m.email}</div>
+        </div>
+        <span class="badge-status badge-status-neutral font-semibold text-[10px]">${m.papel}</span>
+      </div>
+    `).join('');
+
+    let decisaoHtml = dec ? `
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-xs">
+        <div class="font-semibold text-slate-800">Parâmetros Enviados:</div>
+        <div class="grid grid-cols-2 gap-2 text-[11px]">
+          <div>Preço: <strong>R$ ${dec.payload?.preco?.toFixed(2) || '0.00'}</strong></div>
+          <div>Marketing: <strong>R$ ${dec.payload?.marketing?.toLocaleString('pt-BR') || '0'}</strong></div>
+          <div>Compra Normal: <strong>${dec.payload?.compraEstoqueNormal || 0} un.</strong></div>
+          <div>Compra Urgente: <strong>${dec.payload?.compraEstoqueUrgente || 0} un.</strong></div>
+        </div>
+        <div class="pt-2 border-t border-slate-200 space-y-1">
+          <div class="text-[11px] text-slate-500">Maturidade Analítica (${dec.justificativa?.tipoAnalise || 'N/A'}):</div>
+          <div class="text-[11px] italic text-slate-700 font-medium">"${dec.justificativa?.evidencia || 'Sem evidência registrada'}"</div>
+          <div class="text-[11px] text-slate-600">Hipótese: "${dec.justificativa?.hipotese || 'Sem hipótese registrada'}"</div>
+        </div>
+      </div>
+    ` : `<p class="text-xs text-slate-400 italic">Nenhuma decisão registrada ainda para esta rodada.</p>`;
+
+    const html = `
+      <div class="space-y-4">
+        <div>
+          <span class="badge-status badge-status-neutral uppercase text-[10px]">${equipe.setor}</span>
+          <h3 class="text-base font-bold text-slate-900 mt-1">${equipe.nome}</h3>
+          <p class="text-xs text-slate-500 font-mono mt-0.5">CNPJ: ${equipe.cnpj}</p>
+        </div>
+
+        <div class="space-y-2">
+          <div class="text-xs font-bold uppercase tracking-wider text-slate-700">Diretoria Executiva (${equipe.membros.length})</div>
+          <div class="space-y-1.5">
+            ${membrosHtml}
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-2 border-t border-slate-200">
+          <div class="text-xs font-bold uppercase tracking-wider text-slate-700">Submissão da Rodada Atual</div>
+          ${decisaoHtml}
+        </div>
+      </div>
+    `;
+
+    abrirSideSheet('Ficha Corporativa', html);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function handleIniciarSimulacao() {
+  const salaId = document.querySelector('[data-sala-id]').dataset.salaId;
+  if (!confirm('Deseja iniciar oficialmente a simulação na Rodada 1?')) return;
+
+  if (window.auroraSocket && window.auroraSocket.connected) {
+    window.auroraSocket.emit('rodada:iniciar', { salaId }, (res) => {
+      if (res && res.sucesso) {
+        showToast('Simulação iniciada com sucesso!', 'sucesso');
+        setTimeout(() => window.location.reload(), 600);
+      } else {
+        showToast((res && res.erro) || 'Erro ao iniciar simulação.', 'erro');
+      }
+    });
+  } else {
+    showToast('Aguardando sincronização com o servidor...', 'alerta');
+  }
+}
+
+function handleFecharRodada() {
+  const salaId = document.querySelector('[data-sala-id]').dataset.salaId;
+  if (!confirm('Confirma o fechamento da rodada e a conciliação contábil geral de todas as empresas?')) return;
+
+  if (window.auroraSocket && window.auroraSocket.connected) {
+    window.auroraSocket.emit('rodada:fechar', { salaId }, (res) => {
+      if (res && res.sucesso) {
+        showToast('Rodada processada e novos dados gerados!', 'sucesso');
+        setTimeout(() => window.location.reload(), 600);
+      } else {
+        showToast((res && res.erro) || 'Erro ao fechar rodada.', 'erro');
+      }
+    });
+  } else {
+    showToast('Aguardando sincronização com o servidor...', 'alerta');
+  }
+}
+
+async function handleToggleLaboratorio(habilitar) {
+  const salaId = document.querySelector('[data-sala-id]').dataset.salaId;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  try {
+    const res = await fetch(`/api/salas/${salaId}/toggle-laboratorio`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ habilitado: habilitar })
+    });
+    const data = await res.json();
+    if (data.sucesso) {
+      showToast(habilitar ? 'Laboratório web liberado para os alunos.' : 'Foco em Power BI ativado para a sala.', 'sucesso');
+      setTimeout(() => window.location.reload(), 600);
+    } else {
+      showToast(data.erro || 'Falha ao alterar configuração.', 'erro');
+    }
+  } catch (err) {
+    showToast('Erro de comunicação.', 'erro');
+  }
+}
+</script>

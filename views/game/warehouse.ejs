@@ -1,0 +1,254 @@
+<!-- Aurora Business Lab - Gêmeo Digital do Galpão (Visualização 3D CAD / Wireframe Blueprint) -->
+<%
+  const snap = warehouse.snapshots.find(s => s.rodada === warehouse.rodadaSelecionada) || warehouse.snapshots[warehouse.snapshots.length - 1];
+  const m = snap.metricas;
+  const brl = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  const num = (v) => Number(v || 0).toLocaleString('pt-BR');
+%>
+
+<style>
+  .bp-shell { --bp-bg:#0B1120; --bp-panel:#0E1628; --bp-line:#1E2A44; --bp-cyan:#22D3EE; --bp-cyan-soft:#67E8F9; --bp-amber:#F59E0B; --bp-red:#F43F5E; --bp-text:#CBD5E1; --bp-mute:#64748B; }
+  .bp-shell { background: var(--bp-bg); border:1px solid #1B2540; border-radius:14px; color:var(--bp-text); overflow:hidden; box-shadow: 0 20px 40px -24px rgba(2,6,23,.6); }
+  .bp-mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .bp-viewport { position:relative; background:
+      radial-gradient(ellipse at 50% 40%, rgba(34,211,238,.06), transparent 60%), var(--bp-bg); min-height: 560px; }
+  .bp-viewport canvas { display:block; outline:none; }
+  .bp-seg { display:inline-flex; padding:2px; border:1px solid var(--bp-line); border-radius:8px; background:rgba(14,22,40,.85); backdrop-filter: blur(6px); }
+  .bp-seg button { font-size:11px; padding:4px 10px; border-radius:6px; color:#94A3B8; transition: all .15s ease; }
+  .bp-seg button:hover { color:#E2E8F0; }
+  .bp-seg button.is-active { background:#16223B; color:#E0F7FF; box-shadow: inset 0 0 0 1px rgba(34,211,238,.35); }
+  .bp-overlay { position:absolute; z-index:5; }
+  .bp-tooltip { position:absolute; pointer-events:none; z-index:10; padding:6px 9px; border-radius:7px; background:rgba(11,17,32,.94); border:1px solid rgba(34,211,238,.45); color:#E0F7FF; font-size:11px; white-space:nowrap; transform: translate(14px, -50%); opacity:0; transition: opacity .12s ease; box-shadow: 0 0 0 4px rgba(34,211,238,.06); }
+  .bp-tooltip.is-visible { opacity:1; }
+  .bp-label { font-size:10px; letter-spacing:.08em; color: var(--bp-cyan-soft); text-shadow: 0 0 6px rgba(34,211,238,.35); pointer-events:none; user-select:none; }
+  .bp-label--big { font-size:14px; font-weight:700; color:#A5F3FC; }
+  .bp-label--dim { color:#94A3B8; text-shadow:none; }
+  .bp-label--amber { color:#FCD34D; text-shadow: 0 0 6px rgba(245,158,11,.35); }
+  .bp-hud { background: var(--bp-panel); border-left:1px solid var(--bp-line); }
+  .bp-metric { padding: 11px 16px; border-bottom:1px solid var(--bp-line); }
+  .bp-metric-label { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color: var(--bp-mute); }
+  .bp-metric-value { font-size:18px; color:#F1F5F9; margin-top:2px; line-height:1.2; }
+  .bp-bar { height:6px; display:grid; grid-template-columns: repeat(20, 1fr); gap:2px; margin-top:8px; }
+  .bp-bar span { background:#16223B; border-radius:1px; transition: background .3s ease; }
+  .bp-bar span.on { background: var(--bp-cyan); box-shadow: 0 0 6px rgba(34,211,238,.45); }
+  .bp-bar span.warn { background: var(--bp-amber); }
+  .bp-bar span.crit { background: var(--bp-red); }
+  .bp-round-btn { font-size:10px; min-width:30px; padding:3px 6px; border-radius:5px; color:#94A3B8; border:1px solid transparent; }
+  .bp-round-btn:hover { color:#E2E8F0; }
+  .bp-round-btn.is-active { color:#E0F7FF; border-color: rgba(34,211,238,.5); background: rgba(34,211,238,.08); }
+  .bp-range { -webkit-appearance:none; appearance:none; width:80px; height:2px; background:#1E2A44; border-radius:2px; }
+  .bp-range::-webkit-slider-thumb { -webkit-appearance:none; width:10px; height:10px; border-radius:50%; background: var(--bp-cyan); box-shadow: 0 0 0 3px rgba(34,211,238,.2); cursor:pointer; }
+  .bp-legend-swatch { width:10px; height:10px; border-radius:2px; display:inline-block; }
+  .bp-kbd { font-size:9px; padding:0 4px; border:1px solid #24324F; border-radius:3px; color:#64748B; }
+  .bp-shell:fullscreen { width: 100vw; height: 100vh; max-width: 100vw; border-radius: 0; border: none; }
+  .bp-shell:fullscreen #warehouse-viewport { height: 100vh !important; }
+  .bp-shell.is-fullscreen { position: fixed; inset: 0; z-index: 9999; width: 100vw; height: 100vh; max-width: 100vw; border-radius: 0; border: none; }
+  .bp-shell.is-fullscreen #warehouse-viewport { height: 100vh !important; }
+</style>
+
+<div class="space-y-4 pb-10">
+
+  <!-- Cabeçalho Slim -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 pb-3 border-b border-slate-200/80">
+    <div>
+      <div class="flex items-center gap-2 text-[11px] text-slate-400 font-medium mb-1">
+        <span><%= currentRoom.nome %></span><span>/</span>
+        <span class="text-slate-600">Operações (COO)</span><span>/</span>
+        <span class="text-slate-900 font-semibold">Galpão 3D</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Gêmeo Digital do Galpão</h1>
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 tracking-wider">CAD • WIREFRAME</span>
+      </div>
+      <p class="text-xs text-slate-500 mt-1 max-w-2xl">
+        Panorama físico do estoque da <strong><%= currentTeam.nome %></strong>: <%= warehouse.config.capacidadePosicoes %> posições de palete
+        (<%= warehouse.config.corredores.length %> corredores × <%= warehouse.config.modulosPorCorredor %> módulos × <%= warehouse.config.niveis %> níveis),
+        <%= warehouse.config.unidadesPorPalete %> un./palete, capacidade de <strong><%= num(warehouse.config.capacidadeUnidades) %> un.</strong>
+      </p>
+    </div>
+    <div class="text-[11px] text-slate-400 flex items-center gap-3">
+      <span class="flex items-center gap-1"><span class="bp-kbd">1–4</span> vistas</span>
+      <span class="flex items-center gap-1"><span class="bp-kbd">W</span><span class="bp-kbd">X</span><span class="bp-kbd">H</span> modos</span>
+      <span class="flex items-center gap-1"><span class="bp-kbd">F</span> tela cheia</span>
+      <span class="flex items-center gap-1"><span class="bp-kbd">Space</span> animar</span>
+    </div>
+  </div>
+
+  <% if (warehouse.rodadas.length === 0) { %>
+    <div class="app-card p-3.5 flex items-start gap-3 border-cyan-200/70 bg-cyan-50/30">
+      <div class="w-7 h-7 rounded-md bg-cyan-100 text-cyan-700 flex items-center justify-center text-xs font-bold shrink-0">i</div>
+      <p class="text-xs text-slate-700 leading-relaxed">
+        <strong>Galpão vazio.</strong> Nenhuma rodada foi apurada ainda. Assim que o facilitador processar a Rodada 1, as posições serão preenchidas com o estoque físico remanescente e os pedidos em trânsito aparecerão na doca.
+      </p>
+    </div>
+  <% } %>
+
+  <!-- Prancheta CAD -->
+  <section class="bp-shell grid grid-cols-1 lg:grid-cols-[1fr_300px]" id="warehouse-shell" aria-label="Visualização 3D do galpão">
+
+    <!-- Viewport 3D -->
+    <div class="bp-viewport" id="warehouse-viewport" style="height: calc(100vh - 230px);">
+
+      <!-- Toolbar superior -->
+      <div class="bp-overlay top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <div class="flex items-center gap-2 pointer-events-auto">
+          <div class="bp-seg" id="wh-views" role="group" aria-label="Vistas">
+            <button data-view="iso" class="is-active" id="wh-view-iso">Iso</button>
+            <button data-view="top" id="wh-view-top">Topo</button>
+            <button data-view="front" id="wh-view-front">Frontal</button>
+            <button data-view="side" id="wh-view-side">Lateral</button>
+          </div>
+          <div class="bp-seg hidden sm:inline-flex items-center gap-2 px-2.5" title="Corte de seção por nível">
+            <span class="text-[10px] text-slate-400 bp-mono">CORTE</span>
+            <input type="range" min="1" max="<%= warehouse.config.niveis %>" value="<%= warehouse.config.niveis %>" class="bp-range" id="wh-section" aria-label="Corte de seção" />
+            <span class="text-[10px] text-cyan-300 bp-mono" id="wh-section-label">N1–N<%= warehouse.config.niveis %></span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 pointer-events-auto">
+          <div class="bp-seg" id="wh-modes" role="group" aria-label="Modos de renderização">
+            <button data-mode="wireframe" class="is-active" id="wh-mode-wireframe">Wireframe</button>
+            <button data-mode="xray" id="wh-mode-xray">Raio-X</button>
+            <button data-mode="heat" id="wh-mode-heat">Calor</button>
+          </div>
+          <div class="bp-seg">
+            <button id="wh-btn-fullscreen" type="button" class="flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-slate-300 hover:text-white transition" title="Alternar Tela Cheia (F)" aria-label="Alternar Tela Cheia">
+              <svg id="wh-icon-expand" class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+              <svg id="wh-icon-compress" class="w-3.5 h-3.5 text-cyan-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0h4m-4 0v4m11 5l5 5m0 0h-4m4 0v-4M9 15l-5 5m0 0h4m-4 0v-4m11-5l5-5m0 0h-4m4 0v4"></path></svg>
+              <span class="hidden sm:inline bp-mono text-[10px]" id="wh-fullscreen-text">EXPANDIR</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gizmo de eixos -->
+      <canvas id="wh-gizmo" class="bp-overlay bottom-14 left-3" width="84" height="84" aria-hidden="true"></canvas>
+
+      <!-- Legenda do modo calor -->
+      <div id="wh-heat-legend" class="bp-overlay top-14 right-3 hidden bp-seg flex-col gap-1 px-2.5 py-2 text-[10px] bp-mono">
+        <span class="text-slate-400 mb-0.5">IDADE DO LOTE</span>
+        <span class="flex items-center gap-1.5"><span class="bp-legend-swatch" style="background:#22D3EE"></span>Rodada atual</span>
+        <span class="flex items-center gap-1.5"><span class="bp-legend-swatch" style="background:#34D399"></span>1 rodada</span>
+        <span class="flex items-center gap-1.5"><span class="bp-legend-swatch" style="background:#F59E0B"></span>2 rodadas</span>
+        <span class="flex items-center gap-1.5"><span class="bp-legend-swatch" style="background:#F43F5E"></span>3+ rodadas</span>
+      </div>
+
+      <!-- Linha do tempo + barra de status -->
+      <div class="bp-overlay bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <div class="bp-seg items-center gap-1 px-1.5 py-1 pointer-events-auto" id="wh-timeline">
+          <button id="wh-play" class="bp-round-btn" title="Animar rodadas (Space)" aria-label="Animar rodadas">▶</button>
+          <span class="w-px h-4 bg-slate-700 mx-1"></span>
+          <% if (warehouse.rodadas.length === 0) { %>
+            <span class="text-[10px] text-slate-500 bp-mono px-2">R0 • sem apuração</span>
+          <% } %>
+          <% warehouse.rodadas.forEach(r => { %>
+            <button class="bp-round-btn bp-mono <%= r === warehouse.rodadaSelecionada ? 'is-active' : '' %>" data-round="<%= r %>">R<%= r %></button>
+          <% }) %>
+        </div>
+        <div class="bp-seg px-3 py-1 text-[10px] text-slate-400 bp-mono gap-3 pointer-events-auto" id="wh-status">
+          <span>X: <span id="wh-coord-x" class="text-slate-200">0.00</span></span>
+          <span>Z: <span id="wh-coord-z" class="text-slate-200">0.00</span></span>
+          <span class="text-slate-600">|</span>
+          <span>Escala 1:200</span>
+          <span class="text-slate-600 hidden md:inline">|</span>
+          <span class="hidden md:inline" id="wh-fps">— fps</span>
+        </div>
+      </div>
+
+      <div class="bp-tooltip bp-mono" id="wh-tooltip"></div>
+
+      <div id="wh-fallback" class="hidden absolute inset-0 flex items-center justify-center text-xs text-slate-400 text-center px-6">
+        Não foi possível iniciar o WebGL neste navegador. As métricas ao lado continuam válidas.
+      </div>
+    </div>
+
+    <!-- HUD de Métricas -->
+    <aside class="bp-hud flex flex-col" id="warehouse-hud" aria-label="Métricas do galpão">
+      <div class="px-4 py-3 border-b border-[#1E2A44] flex items-center justify-between">
+        <span class="text-[10px] font-bold tracking-[.14em] text-slate-400">TELEMETRIA</span>
+        <span class="text-[10px] bp-mono text-cyan-300" id="hud-round">R<%= snap.rodada %></span>
+      </div>
+
+      <div class="bp-metric">
+        <div class="flex items-baseline justify-between">
+          <span class="bp-metric-label">Ocupação</span>
+          <span class="bp-mono text-xl text-white" id="hud-ocupacao"><%= m.ocupacao.toFixed(1).replace('.', ',') %>%</span>
+        </div>
+        <div class="bp-bar" id="hud-ocupacao-bar"><% for (let i = 0; i < 20; i++) { %><span></span><% } %></div>
+        <div class="text-[11px] text-slate-400 mt-2 bp-mono">
+          <span id="hud-pos-ocupadas" class="text-cyan-300"><%= m.posicoesOcupadas %></span> ocupadas ·
+          <span id="hud-pos-livres"><%= m.posicoesLivres %></span> livres ·
+          <span id="hud-pos-total"><%= m.capacidadePosicoes %></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2">
+        <div class="bp-metric border-r border-[#1E2A44]">
+          <div class="bp-metric-label">Estoque</div>
+          <div class="bp-metric-value bp-mono"><span id="hud-estoque"><%= num(m.estoqueUnidades) %></span> <span class="text-[11px] text-slate-500">un</span></div>
+        </div>
+        <div class="bp-metric">
+          <div class="bp-metric-label">Valor contábil</div>
+          <div class="bp-metric-value bp-mono" id="hud-valor"><%= brl(m.valorContabil) %></div>
+        </div>
+        <div class="bp-metric border-r border-[#1E2A44]">
+          <div class="bp-metric-label">Em trânsito</div>
+          <div class="bp-metric-value bp-mono text-amber-300"><span id="hud-transito"><%= num(m.emTransito) %></span> <span class="text-[11px] text-slate-500">un</span></div>
+        </div>
+        <div class="bp-metric">
+          <div class="bp-metric-label">Armazenagem</div>
+          <div class="bp-metric-value bp-mono" id="hud-armazenagem"><%= brl(m.custoArmazenagem) %></div>
+        </div>
+        <div class="bp-metric border-r border-[#1E2A44]">
+          <div class="bp-metric-label">Perdas</div>
+          <div class="bp-metric-value bp-mono text-rose-400"><span id="hud-perdas"><%= num(m.unidadesPerdidas) %></span> <span class="text-[11px] text-slate-500">un</span></div>
+          <div class="text-[10px] text-slate-500 bp-mono" id="hud-perdas-valor"><%= brl(m.custoPerdas) %></div>
+        </div>
+        <div class="bp-metric">
+          <div class="bp-metric-label">Atendimento</div>
+          <div class="bp-metric-value bp-mono" id="hud-atendimento"><%= m.taxaAtendimento.toFixed(1).replace('.', ',') %>%</div>
+          <div class="text-[10px] text-slate-500 bp-mono"><span id="hud-ruptura"><%= num(m.vendasPerdidas) %></span> un ruptura</div>
+        </div>
+        <div class="bp-metric border-r border-[#1E2A44]">
+          <div class="bp-metric-label">Giro</div>
+          <div class="bp-metric-value bp-mono" id="hud-giro"><%= m.giro.toFixed(2).replace('.', ',') %>x</div>
+        </div>
+        <div class="bp-metric">
+          <div class="bp-metric-label">Cobertura</div>
+          <div class="bp-metric-value bp-mono"><span id="hud-cobertura"><%= m.coberturaDias %></span> <span class="text-[11px] text-slate-500">dias</span></div>
+        </div>
+      </div>
+
+      <div class="p-4 space-y-3 mt-auto">
+        <div id="hud-alerta" class="<%= snap.alerta ? '' : 'hidden' %> rounded-lg px-3 py-2.5 text-[11px] leading-relaxed border <%= snap.alerta && snap.alerta.nivel === 'critico' ? 'border-rose-500/50 bg-rose-500/10 text-rose-200' : 'border-amber-500/50 bg-amber-500/10 text-amber-200' %>">
+          <div class="font-semibold flex items-center gap-1.5 mb-0.5"><span>⚠</span><span id="hud-alerta-titulo"><%= snap.alerta && snap.alerta.nivel === 'critico' ? 'Capacidade crítica' : 'Atenção operacional' %></span></div>
+          <div id="hud-alerta-texto"><%= snap.alerta ? snap.alerta.mensagem : '' %></div>
+        </div>
+        <div class="text-[10px] text-slate-500 bp-mono">
+          Projeção c/ trânsito: <span id="hud-projecao" class="text-slate-300"><%= m.ocupacaoProjetada.toFixed(1).replace('.', ',') %>%</span>
+        </div>
+        <div class="grid grid-cols-2 gap-y-1.5 text-[10px] text-slate-400 pt-2 border-t border-[#1E2A44]">
+          <span class="flex items-center gap-1.5"><span class="bp-legend-swatch" style="background:rgba(34,211,238,.35); box-shadow: inset 0 0 0 1px #67E8F9"></span>Ocupado</span>
+          <span class="flex items-center gap-1.5"><span class="bp-legend-swatch" style="border:1px dashed #475569"></span>Vazio</span>
+          <span class="flex items-center gap-1.5"><span class="bp-legend-swatch" style="background:rgba(245,158,11,.3); box-shadow: inset 0 0 0 1px #F59E0B"></span>Em trânsito</span>
+          <span class="flex items-center gap-1.5"><span class="bp-legend-swatch" style="background:rgba(244,63,94,.3); box-shadow: inset 0 0 0 1px #F43F5E"></span>Perdas</span>
+        </div>
+        <p class="text-[10px] text-slate-500 leading-relaxed">
+          A capacidade física é um indicador analítico: não altera o resultado econômico, mas sinaliza estoque parado, custo de armazenagem e risco de lotação.
+        </p>
+      </div>
+    </aside>
+  </section>
+</div>
+
+<!-- Dados do galpão para o renderizador 3D -->
+<script type="application/json" id="warehouse-data"><%- JSON.stringify(warehouse).replace(/</g, '\\u003c') %></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="/js/warehouse3d.js"></script>

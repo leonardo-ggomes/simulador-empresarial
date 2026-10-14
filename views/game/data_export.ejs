@@ -1,0 +1,419 @@
+<div class="space-y-6 pb-16" data-sala-id="<%= currentRoom.id %>" data-equipe-id="<%= currentTeam.id %>">
+
+  <!-- Header Executivo da Central de Dados & Power BI -->
+  <div class="app-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="space-y-1.5">
+      <div class="flex items-center gap-2">
+        <span class="badge-status badge-status-success font-semibold text-[11px]">
+          ● Modelagem de Dados & Business Intelligence
+        </span>
+        <span class="badge-status badge-status-neutral font-semibold text-[11px]">
+          <%= currentTeam.nome %>
+        </span>
+        <span class="badge-status badge-status-neutral font-mono text-[11px]">
+          Rodada Atual: <%= currentRoom.rodada_atual %> de <%= currentRoom.max_rodadas || 12 %>
+        </span>
+      </div>
+      <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+        Hub de Engenharia de Dados & Modelagem no Power BI
+      </h1>
+      <p class="text-xs text-slate-500 max-w-3xl leading-relaxed">
+        A cada rodada gerenciada pelo professor, novos dados de negócio são gerados e distribuídos em <strong>formatos heterogêneos (CSV, TXT, SQL, XLS e Web API)</strong>. Importe as diferentes fontes no Power BI, relacione as tabelas pelo modelo estrela (*Star Schema*) e construa medidas DAX para embasar suas decisões executivas.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <a href="/sala/<%= currentRoom.id %>/decisoes" class="btn-primary text-xs font-semibold">
+        Ir para Decisões →
+      </a>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       1. DIAGRAMA ARQUITETURAL VISUAL: MODELO ESTRELA (STAR SCHEMA)
+       ==================================================================== -->
+  <div class="app-card p-6 space-y-4 bg-gradient-to-br from-white to-slate-50 border border-slate-200">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-mono font-bold uppercase px-2 py-0.5 bg-blue-100 text-blue-800 rounded">Arquitetura de Dados</span>
+          <h2 class="text-sm font-bold text-slate-900 tracking-tight">Esquema Relacional Recomendado no Power BI (Star Schema)</h2>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Conecte as tabelas Fato às Dimensões usando as chaves de relacionamento <code>equipe_id</code> e <code>rodada</code>:
+        </p>
+      </div>
+      <span class="text-[11px] font-mono text-slate-400">Modelo Dimensional: 1:N</span>
+    </div>
+
+    <!-- Visualização Gráfica do Esquema Relacional -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 pt-2 text-xs">
+      
+      <!-- Dimensão 1: Empresas -->
+      <div class="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-bold uppercase text-emerald-800">Dimensão</span>
+          <span class="text-[9px] font-mono px-1.5 py-0.2 bg-emerald-200 text-emerald-900 rounded font-bold">.XLS</span>
+        </div>
+        <div class="font-bold text-slate-900 text-sm">dim_empresas</div>
+        <div class="space-y-0.5 text-[11px] text-slate-600 font-mono">
+          <div class="font-bold text-emerald-700">🔑 equipe_id [PK]</div>
+          <div>• cnpj</div>
+          <div>• empresa_nome</div>
+          <div>• setor</div>
+        </div>
+        <div class="pt-1 border-t border-emerald-200/60 text-[10px] text-emerald-700 font-semibold">
+          Relação: 1 ──► N (Fatos)
+        </div>
+      </div>
+
+      <!-- Fato 1: Vendas -->
+      <div class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-bold uppercase text-blue-800">Tabela Fato</span>
+          <span class="text-[9px] font-mono px-1.5 py-0.2 bg-blue-200 text-blue-900 rounded font-bold">.CSV</span>
+        </div>
+        <div class="font-bold text-slate-900 text-sm">fato_vendas</div>
+        <div class="space-y-0.5 text-[11px] text-slate-600 font-mono">
+          <div class="font-bold text-blue-700">🔗 equipe_id [FK]</div>
+          <div class="font-bold text-blue-700">🔗 rodada [FK]</div>
+          <div>• preco_praticado</div>
+          <div>• unidades_vendidas</div>
+          <div>• ruptura_demanda</div>
+        </div>
+        <div class="pt-1 border-t border-blue-200/60 text-[10px] text-blue-700 font-semibold">
+          Comercial & Varejo
+        </div>
+      </div>
+
+      <!-- Fato 2: Estoque -->
+      <div class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-bold uppercase text-amber-800">Tabela Fato</span>
+          <span class="text-[9px] font-mono px-1.5 py-0.2 bg-amber-200 text-amber-900 rounded font-bold">.TXT</span>
+        </div>
+        <div class="font-bold text-slate-900 text-sm">fato_estoque</div>
+        <div class="space-y-0.5 text-[11px] text-slate-600 font-mono">
+          <div class="font-bold text-amber-700">🔗 equipe_id [FK]</div>
+          <div class="font-bold text-amber-700">🔗 rodada [FK]</div>
+          <div>• compras_normal_un</div>
+          <div>• compras_urgente_un</div>
+          <div>• estoque_final_un</div>
+        </div>
+        <div class="pt-1 border-t border-amber-200/60 text-[10px] text-amber-700 font-semibold">
+          Operações & Cadeia
+        </div>
+      </div>
+
+      <!-- Fato 3: Contabilidade -->
+      <div class="p-3.5 rounded-xl border border-purple-200 bg-purple-50/50 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-bold uppercase text-purple-800">Tabela Fato</span>
+          <span class="text-[9px] font-mono px-1.5 py-0.2 bg-purple-200 text-purple-900 rounded font-bold">.SQL</span>
+        </div>
+        <div class="font-bold text-slate-900 text-sm">fato_contabil</div>
+        <div class="space-y-0.5 text-[11px] text-slate-600 font-mono">
+          <div class="font-bold text-purple-700">🔗 equipe_id [FK]</div>
+          <div class="font-bold text-purple-700">🔗 rodada [FK]</div>
+          <div>• receita_liquida</div>
+          <div>• cmv_total</div>
+          <div>• lucro_liquido</div>
+        </div>
+        <div class="pt-1 border-t border-purple-200/60 text-[10px] text-purple-700 font-semibold">
+          DRE & Balanço ERP
+        </div>
+      </div>
+
+      <!-- Dimensão 2: Macro & Calendário -->
+      <div class="p-3.5 rounded-xl border border-rose-200 bg-rose-50/50 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-bold uppercase text-rose-800">Dimensão</span>
+          <span class="text-[9px] font-mono px-1.5 py-0.2 bg-rose-200 text-rose-900 rounded font-bold">API WEB</span>
+        </div>
+        <div class="font-bold text-slate-900 text-sm">dim_macro_web</div>
+        <div class="space-y-0.5 text-[11px] text-slate-600 font-mono">
+          <div class="font-bold text-rose-700">🔑 rodada [PK]</div>
+          <div>• selic_anual_pct</div>
+          <div>• cambio_dolar</div>
+          <div>• pib_crescimento</div>
+        </div>
+        <div class="pt-1 border-t border-rose-200/60 text-[10px] text-rose-700 font-semibold">
+          Relação: 1 ──► N (Fatos)
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       2. CONEXÃO DIRETA AO VIVO: WEB API (MACROECONOMIA & NOTÍCIAS)
+       ==================================================================== -->
+  <div class="app-card p-6 space-y-4 border-l-4 border-l-rose-500">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-2">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded font-bold">CONECTOR DA WEB</span>
+          <h2 class="text-sm font-bold text-slate-900 tracking-tight">Dimensão 1: Inteligência Macroeconômica & Mercado Externo (JSON API)</h2>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Conecte diretamente no Power BI via <strong>Obter Dados → Da Web</strong> para receber automaticamente o histórico de taxas e notícias a cada nova rodada.
+        </p>
+      </div>
+      <span class="badge-status badge-status-success text-[10px] font-mono">Suporta Botão "Atualizar"</span>
+    </div>
+
+    <!-- URL Copiável -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider" for="macro-api-url">
+        Endereço Web do Endpoint REST:
+      </label>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="text" readonly id="macro-api-url" value="<%= hostUrl %>/api/export/<%= currentRoom.id %>/macro/api?token=<%= currentRoom.seed %>" class="input-base font-mono text-xs select-all bg-slate-50">
+        <button type="button" onclick="copiarEndpoint('macro-api-url')" class="btn-primary text-xs whitespace-nowrap px-4 font-semibold">
+          Copiar Endpoint
+        </button>
+      </div>
+    </div>
+
+    <div class="text-[11px] text-slate-500 flex items-center gap-2 pt-1 font-mono">
+      <span>Contém: Séries temporais da Selic, Câmbio Ptax, PIB, Inflação IPCA, Sazonalidade e Notícias publicadas até a Rodada <%= currentRoom.rodada_atual %>.</span>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       3. OS 4 SILOS DE DADOS EM FORMATOS DISTRIBUÍDOS (DOWNLOADS)
+       ==================================================================== -->
+  <div>
+    <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+      <div>
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-900">
+          Fontes de Dados Heterogêneas (Download por Domínio)
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Baixe os arquivos das áreas de negócio da empresa para carregar e cruzar no Power Query do Power BI:
+        </p>
+      </div>
+      <span class="text-xs text-slate-400 font-mono">4 Formatos Distintos</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <!-- Fonte 1: Comercial & Vendas em CSV -->
+      <div class="app-card p-5 flex flex-col justify-between space-y-4 border-t-4 border-t-blue-600 hover:border-slate-300 transition">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-900">1. Comercial & Vendas</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-bold">.CSV</span>
+          </div>
+          <div class="text-xs font-semibold text-slate-800">fato_vendas_comercial</div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Arquivo delimitado por ponto e vírgula com UTF-8 BOM. Contém preço, marketing, volume vendido, demanda e ruptura.
+          </p>
+          <div class="text-[10px] font-mono text-slate-400 pt-1">
+            Chaves: <strong>equipe_id</strong>, <strong>rodada</strong>
+          </div>
+        </div>
+        <a href="/api/export/<%= currentRoom.id %>/vendas/csv?equipeId=<%= currentTeam.id %>" class="btn-primary text-xs text-center font-medium py-2">
+          Baixar fato_vendas.csv
+        </a>
+      </div>
+
+      <!-- Fonte 2: Estoque & Logística em TXT -->
+      <div class="app-card p-5 flex flex-col justify-between space-y-4 border-t-4 border-t-amber-500 hover:border-slate-300 transition">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-900">2. Estoque & Operações</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded font-bold">.TXT</span>
+          </div>
+          <div class="text-xs font-semibold text-slate-800">fato_estoque_operacoes</div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Arquivo delimitado por tabulação (TSV) do sistema de logística. Contém compras normais/urgentes, estoque final e perdas.
+          </p>
+          <div class="text-[10px] font-mono text-slate-400 pt-1">
+            Chaves: <strong>equipe_id</strong>, <strong>rodada</strong>
+          </div>
+        </div>
+        <a href="/api/export/<%= currentRoom.id %>/estoque/txt?equipeId=<%= currentTeam.id %>" class="btn-secondary text-xs text-center font-medium py-2">
+          Baixar fato_estoque.txt
+        </a>
+      </div>
+
+      <!-- Fonte 3: Contabilidade & ERP em SQL -->
+      <div class="app-card p-5 flex flex-col justify-between space-y-4 border-t-4 border-t-purple-600 hover:border-slate-300 transition">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-900">3. Contabilidade & ERP</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded font-bold">.SQL</span>
+          </div>
+          <div class="text-xs font-semibold text-slate-800">fato_contabilidade_erp</div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Script relacional SQL com DDL <code>CREATE TABLE</code> e comandos <code>INSERT INTO</code> para DRE e Balanço Patrimonial.
+          </p>
+          <div class="text-[10px] font-mono text-slate-400 pt-1">
+            Chaves: <strong>equipe_id</strong>, <strong>rodada</strong>
+          </div>
+        </div>
+        <a href="/api/export/<%= currentRoom.id %>/contabilidade/sql?equipeId=<%= currentTeam.id %>" class="btn-secondary text-xs text-center font-medium py-2">
+          Baixar fato_contabil.sql
+        </a>
+      </div>
+
+      <!-- Fonte 4: Empresas & Concorrentes em XLS -->
+      <div class="app-card p-5 flex flex-col justify-between space-y-4 border-t-4 border-t-emerald-600 hover:border-slate-300 transition">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-900">4. Cadastro & Mercado</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold">.XLS</span>
+          </div>
+          <div class="text-xs font-semibold text-slate-800">dim_empresas_mercado</div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Planilha nativa Excel (XML Spreadsheet) atuando como Dimensão Cadastral de todas as empresas da sala, CNPJ e setores.
+          </p>
+          <div class="text-[10px] font-mono text-slate-400 pt-1">
+            Chave Primária: <strong>equipe_id</strong> (1:N)
+          </div>
+        </div>
+        <a href="/api/export/<%= currentRoom.id %>/empresas/xls" class="btn-secondary text-xs text-center font-medium py-2">
+          Baixar dim_empresas.xls
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       4. GUIA PEDAGÓGICO DE MEDIDAS DAX SUGERIDAS PARA O ALUNO
+       ==================================================================== -->
+  <div class="app-card p-6 space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">
+          Laboratório de DAX: Medidas de Cruzamento Recomendadas
+        </h2>
+        <p class="text-[11px] text-slate-400 mt-0.5">
+          Copie e utilize no Power BI após relacionar as tabelas pelo modelo estrela:
+        </p>
+      </div>
+      <span class="badge-status badge-status-neutral text-[10px]">DAX Measures</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs font-mono">
+      
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+        <span class="text-slate-500 text-[10px] font-sans font-bold">1. Margem de Contribuição Bruta</span>
+        <div class="text-slate-800 text-[11px] font-bold">
+          Margem_Bruta_% = DIVIDE([Receita Líquida] - [CMV], [Receita Líquida], 0)
+        </div>
+        <p class="text-[10px] text-slate-400 font-sans">Cruza DRE com Vendas para avaliar elasticidade.</p>
+      </div>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+        <span class="text-slate-500 text-[10px] font-sans font-bold">2. Custo de Oportunidade por Ruptura</span>
+        <div class="text-slate-800 text-[11px] font-bold">
+          Custo_Ruptura = SUM(fato_vendas[vendas_perdidas_ruptura]) * AVERAGE(fato_vendas[preco_praticado])
+        </div>
+        <p class="text-[10px] text-slate-400 font-sans">Calcula quanto a empresa deixou de faturar por falta de estoque.</p>
+      </div>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+        <span class="text-slate-500 text-[10px] font-sans font-bold">3. Giro de Estoque Trimestral</span>
+        <div class="text-slate-800 text-[11px] font-bold">
+          Giro_Estoque = DIVIDE([CMV], AVERAGE(fato_estoque[estoque_final_unidades]), 0)
+        </div>
+        <p class="text-[10px] text-slate-400 font-sans">Relaciona compras e CMV para medir velocidade de rotação.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       5. PRÉVIA DOS DADOS CONSOLIDADOS (INSPEÇÃO RÁPIDA)
+       ==================================================================== -->
+  <div class="app-card overflow-hidden">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">
+          Inspeção Rápida de Registros Processados
+        </h2>
+        <p class="text-[11px] text-slate-400 mt-0.5">
+          <%= typeof previewDataset !== 'undefined' ? previewDataset.length : 0 %> registros históricos disponíveis na simulação
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="/api/export/<%= currentRoom.id %>/csv?equipeId=<%= currentTeam.id %>" class="btn-secondary text-[11px] py-1 px-2.5">
+          Baixar Consolidador Único (Backup)
+        </a>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="table-editorial text-xs">
+        <thead>
+          <tr>
+            <th>Rodada</th>
+            <th>Ano / Trim</th>
+            <th class="text-right">Preço</th>
+            <th class="text-right">Marketing</th>
+            <th class="text-right">Demanda</th>
+            <th class="text-right">Vendidas</th>
+            <th class="text-right">Ruptura</th>
+            <th class="text-right">Receita Bruta</th>
+            <th class="text-right">CMV</th>
+            <th class="text-right">Lucro Líquido</th>
+            <th class="text-right">Caixa Final</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (typeof previewDataset !== 'undefined' && previewDataset.length > 0) { %>
+            <% previewDataset.slice(0, 10).forEach(r => { %>
+              <tr>
+                <td class="font-semibold text-slate-900"><%= r.rodada %></td>
+                <td><%= r.ano %> / T<%= r.trimestre %></td>
+                <td class="text-right tabular-nums">R$ <%= r.precoPraticado.toFixed(2) %></td>
+                <td class="text-right tabular-nums">R$ <%= r.investimentoMarketing.toFixed(2) %></td>
+                <td class="text-right tabular-nums"><%= r.demandaRecebida %> un</td>
+                <td class="text-right tabular-nums"><%= r.unidadesVendidas %> un</td>
+                <td class="text-right tabular-nums <%= r.vendasPerdidasRuptura > 0 ? 'text-rose-600 font-semibold' : 'text-slate-400' %>">
+                  <%= r.vendasPerdidasRuptura %> un
+                </td>
+                <td class="text-right tabular-nums font-semibold text-slate-900">
+                  R$ <%= r.receitaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                </td>
+                <td class="text-right tabular-nums text-slate-600">
+                  R$ <%= r.cmv.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                </td>
+                <td class="text-right tabular-nums font-semibold <%= r.lucroLiquido >= 0 ? 'text-emerald-700' : 'text-rose-600' %>">
+                  R$ <%= r.lucroLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                </td>
+                <td class="text-right tabular-nums font-bold text-slate-900">
+                  R$ <%= r.caixaFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="11" class="text-center py-8 text-xs text-slate-400">
+                Aguardando o fechamento da 1ª rodada pelo professor para disponibilização dos arquivos.
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function copiarEndpoint(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  if (typeof showToast === 'function') {
+    showToast('Endpoint copiado com sucesso para o Power BI!', 'sucesso');
+  } else {
+    alert('Endpoint copiado!');
+  }
+}
+</script>

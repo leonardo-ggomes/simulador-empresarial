@@ -1,0 +1,678 @@
+<div class="space-y-6 pb-16" data-sala-id="<%= currentRoom.id %>" data-sala-codigo="<%= currentRoom.codigo %>">
+
+  <!-- ====================================================================
+       1. FITA DE COTAÇÕES FINANCEIRAS EM TEMPO REAL (MARQUEE TICKER)
+       ==================================================================== -->
+  <div class="gazeta-ticker-bar rounded-lg shadow-sm border border-slate-900">
+    <div class="gazeta-ticker-track py-2">
+      <!-- Repetido para loop contínuo impecável -->
+      <% for (let repeat = 0; repeat < 2; repeat++) { %>
+        <div class="flex items-center">
+          <div class="ticker-item font-bold text-amber-400">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            PREGÃO PORTO AURORA • RODADA <%= currentRoom.rodada_atual %>
+          </div>
+          <div class="ticker-item">
+            <span class="text-slate-400">SELIC:</span>
+            <span class="font-bold text-emerald-400"><%= macroData.selic %>% a.a.</span>
+            <span class="text-[10px] text-slate-500">(<%= macroData.selicTrimestral %>% trim.)</span>
+          </div>
+          <div class="ticker-item">
+            <span class="text-slate-400">DÓLAR PTAX:</span>
+            <span class="font-bold text-slate-100">R$ <%= macroData.cambio.toFixed(2) %></span>
+            <span class="text-[10px] <%= macroData.cambio >= 5.20 ? 'text-rose-400' : 'text-emerald-400' %>">
+              <%= macroData.cambio >= 5.20 ? '▲ Pressionado' : '▼ Estável' %>
+            </span>
+          </div>
+          <div class="ticker-item">
+            <span class="text-slate-400">PIB REGIONAL:</span>
+            <span class="font-bold <%= macroData.pibCrescimento >= 0 ? 'text-emerald-400' : 'text-rose-400' %>">
+              <%= macroData.pibCrescimento >= 0 ? '+' : '' %><%= macroData.pibCrescimento %>%
+            </span>
+          </div>
+          <div class="ticker-item">
+            <span class="text-slate-400">IPCA ANUAL:</span>
+            <span class="font-bold text-slate-100"><%= macroData.inflacao %>%</span>
+          </div>
+          <div class="ticker-item">
+            <span class="text-slate-400">SAZONALIDADE:</span>
+            <span class="font-bold text-blue-400"><%= macroData.sazonalidade %>x</span>
+          </div>
+          <div class="ticker-item">
+            <span class="text-slate-400">REF. MERCADO:</span>
+            <span class="font-bold text-slate-100">R$ 80,00</span>
+          </div>
+          <div class="ticker-item">
+            <span class="text-slate-400">CMV BASE:</span>
+            <span class="font-bold text-slate-100">R$ 35,00/un</span>
+          </div>
+          <div class="ticker-item">
+            <span class="text-slate-400">CRÉDITO AURORA:</span>
+            <span class="font-bold text-emerald-400">LINHA ATIVA</span>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       2. CABEÇALHO MASTHEAD DE JORNAL IMPRESSO / DIGITAL
+       ==================================================================== -->
+  <header class="app-card p-6 md:p-8 bg-white border border-slate-200">
+    
+    <!-- Linha Superior: Data, Cidade e Dados da Edição -->
+    <div class="gazeta-edition-line py-1.5 flex flex-wrap items-center justify-between text-[11px] text-slate-500 uppercase tracking-widest font-mono">
+      <div>Porto Aurora, 2031 • Ano IX • Edição Nº <%= currentRoom.rodada_atual * 4 + 104 %></div>
+      <div class="font-bold text-slate-700">Trimestre <%= macroData.trimestre %> / <%= macroData.ano %> • Rodada <%= currentRoom.rodada_atual %> de <%= currentRoom.max_rodadas || 12 %></div>
+      <div>Observatório Econômico & Financeiro</div>
+    </div>
+
+    <!-- Título Principal Editorial (Masthead Clássico) -->
+    <div class="text-center py-6 md:py-8 space-y-1">
+      <div class="text-[11px] font-mono uppercase tracking-[0.25em] text-slate-400 font-bold">
+        O DIÁRIO OFICIAL DOS NEGÓCIOS E DO MERCADO DE CAPITAIS
+      </div>
+      <h1 class="text-4xl md:text-6xl font-black font-editorial text-slate-950 tracking-tight select-none">
+        GAZETA AURORA
+      </h1>
+      <p class="text-xs md:text-sm font-editorial italic text-slate-600 max-w-2xl mx-auto">
+        "Veritas in Mercatus: Notícias, Análise Fundamentalista e Inteligência Macroeconômica para as Diretorias Executivas"
+      </p>
+    </div>
+
+    <!-- Linha Divisória Clássica de Jornal (Double Rule) -->
+    <div class="gazeta-masthead-rule py-2 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+      
+      <!-- Seções / Cadernos Editoriais -->
+      <nav class="flex items-center gap-1 overflow-x-auto w-full md:w-auto scrollbar-none py-1">
+        <button type="button" onclick="filtrarNoticias('todas')" class="px-2.5 py-1 rounded text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 transition caderno-btn active" id="caderno-todas">
+          Principal
+        </button>
+        <button type="button" onclick="filtrarNoticias('macro')" class="px-2.5 py-1 rounded text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition caderno-btn" id="caderno-macro">
+          Macroeconomia
+        </button>
+        <button type="button" onclick="filtrarNoticias('logistica_porto')" class="px-2.5 py-1 rounded text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition caderno-btn" id="caderno-logistica_porto">
+          Porto & Logística
+        </button>
+        <button type="button" onclick="filtrarNoticias('credito')" class="px-2.5 py-1 rounded text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition caderno-btn" id="caderno-credito">
+          Crédito & Juros
+        </button>
+        <button type="button" onclick="filtrarNoticias('consumo')" class="px-2.5 py-1 rounded text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition caderno-btn" id="caderno-consumo">
+          Varejo & Consumo
+        </button>
+        <button type="button" onclick="filtrarNoticias('arquivo')" class="px-2.5 py-1 rounded text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition caderno-btn" id="caderno-arquivo">
+          Arquivo (<%= typeof todasNoticias !== 'undefined' ? todasNoticias.length : 0 %>)
+        </button>
+      </nav>
+
+      <!-- Ações Rápidas de Navegação -->
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="/sala/<%= currentRoom.id %>/briefing" class="btn-secondary text-xs">
+          Ver Briefing
+        </a>
+        <a href="/sala/<%= currentRoom.id %>/decisoes" class="btn-primary text-xs font-semibold">
+          Aplicar nas Decisões →
+        </a>
+      </div>
+
+    </div>
+
+  </header>
+
+  <!-- ====================================================================
+       3. CORPO DO JORNAL: GRID EDITORIAL (MANCHETE + REPORTAGENS + TERMINAL)
+       ==================================================================== -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- COLUNA PRINCIPAL DE NOTÍCIAS (8 Colunas) -->
+    <div class="lg:col-span-8 space-y-6">
+
+      <!-- MANCHETE PRINCIPAL DE CAPA (LEAD STORY) -->
+      <% const manchete = (typeof noticiasRodada !== 'undefined' && noticiasRodada.length > 0) ? noticiasRodada[0] : null; %>
+      
+      <% if (manchete) { %>
+        <article class="app-card p-6 md:p-8 bg-white border border-slate-200 space-y-4 hover:border-slate-300 transition-colors">
+          
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="bg-rose-900 text-white font-mono uppercase text-[10px] font-bold px-2 py-0.5 rounded-sm tracking-wider">
+                MANCHETE PRINCIPAL • RODADA <%= currentRoom.rodada_atual %>
+              </span>
+              <span class="gazeta-category-pill bg-slate-100 text-slate-700">
+                <%= manchete.categoria %>
+              </span>
+            </div>
+
+            <!-- Selo de Fact-Checking do Observatório -->
+            <% const confPerc = Math.round((manchete.confiabilidade || 1) * 100); %>
+            <div class="flex items-center gap-1.5 text-xs font-mono">
+              <% if (confPerc >= 85) { %>
+                <span class="badge-status badge-status-success font-semibold text-[11px]" title="Investigação concluída por fontes oficiais">
+                  ✓ Fato Verificado (<%= confPerc %>%)
+                </span>
+              <% } else if (confPerc >= 65) { %>
+                <span class="badge-status badge-status-warning font-semibold text-[11px]" title="Informação em processo de apuração">
+                  ⚡ Em Apuração (<%= confPerc %>%)
+                </span>
+              <% } else { %>
+                <span class="badge-status badge-status-danger font-semibold text-[11px]" title="Alto risco de ruído estatístico / falso boato">
+                  ⚠️ Rumor de Mercado (<%= confPerc %>%)
+                </span>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Título da Manchete em Tipografia Editorial -->
+          <h2 class="text-2xl md:text-3xl font-bold font-editorial text-slate-900 leading-snug tracking-tight hover:text-blue-900 transition-colors cursor-pointer" onclick="abrirArtigoCompleto('<%= escape(JSON.stringify(manchete)) %>')">
+            <%= manchete.titulo %>
+          </h2>
+
+          <!-- Subtítulo e Autoria -->
+          <div class="flex items-center gap-2 text-xs text-slate-500 font-mono">
+            <span>Por <strong>Redação Gazeta Aurora</strong></span>
+            <span>•</span>
+            <span>Porto Aurora</span>
+            <span>•</span>
+            <span>Trimestre <%= macroData.trimestre %> / <%= macroData.ano %></span>
+          </div>
+
+          <!-- Texto do Artigo com Dropcap Editorial -->
+          <div class="gazeta-dropcap font-editorial text-base text-slate-700 leading-relaxed pt-2">
+            <%= manchete.texto %>
+          </div>
+
+          <!-- Raio-X de Efeito Econômico no Simulador -->
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 mt-4">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-slate-900 uppercase tracking-wider text-[11px]">
+                Impacto Estimado no Motor Econômico
+              </span>
+              <span class="font-mono text-slate-500">
+                Efeito: <strong class="text-slate-800 capitalize"><%= manchete.tipo_efeito %></strong> | Duração: <strong class="text-slate-800"><%= manchete.duracao_rodadas || 1 %> tri.</strong>
+              </span>
+            </div>
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              <% if (manchete.tipo_efeito === 'demanda') { %>
+                Este evento afeta a <strong>disposição agregada de compra</strong> das famílias em Porto Aurora. Recomenda-se que o <strong>CMO</strong> calibre a precificação e o <strong>COO</strong> ajuste o volume de compras de lotes.
+              <% } else if (manchete.tipo_efeito === 'custo') { %>
+                Este evento impacta o <strong>custo unitário de aquisição e fretes</strong>. As margens operacionais podem ser comprimidas caso o preço não seja repassado ou a compra de insumos não seja otimizada.
+              <% } else if (manchete.tipo_efeito === 'elasticidade') { %>
+                A sensibilidade do consumidor ao preço foi alterada. Estratégias agressivas de aumento de preço sem suporte comercial podem causar perdas aceleradas de market share.
+              <% } else if (manchete.tipo_efeito === 'credito_juros') { %>
+                Condições de liquidez e taxas do Banco Aurora sob pressão. O <strong>CFO</strong> deve monitorar o fluxo de caixa para evitar endividamento oneroso.
+              <% } else { %>
+                Monitoramento recomendado por todas as diretorias executivas da empresa.
+              <% } %>
+            </p>
+
+            <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+              <button type="button" onclick="abrirArtigoCompleto('<%= escape(JSON.stringify(manchete)) %>')" class="text-xs font-semibold text-blue-700 hover:text-blue-900 transition flex items-center gap-1">
+                <span>Abrir Análise Editorial Completa</span>
+                <span>→</span>
+              </button>
+              <span class="text-[11px] text-slate-400 font-mono">Fonte: Inteligência Macroeconômica</span>
+            </div>
+          </div>
+
+        </article>
+      <% } %>
+
+      <!-- MATÉRIAS SECUNDÁRIAS DA RODADA (CADERNOS & REPORTAGENS) -->
+      <div id="container-noticias-grid">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-200 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-900">Despachos & Cadernos Regionais</span>
+            <span class="text-xs text-slate-400 font-mono" id="noticias-contador">
+              <%= typeof noticiasRodada !== 'undefined' ? noticiasRodada.length : 0 %> publicados
+            </span>
+          </div>
+          <span class="text-[11px] text-slate-400 font-mono">Rodada <%= currentRoom.rodada_atual %></span>
+        </div>
+
+        <% if (typeof noticiasRodada !== 'undefined' && noticiasRodada.length > 0) { %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="cards-noticias-lista">
+            <% noticiasRodada.forEach((noticia, idx) => { %>
+              <div class="gazeta-card p-5 rounded-lg flex flex-col justify-between space-y-3 cursor-pointer noticia-item" data-categoria="<%= noticia.categoria %>" onclick="abrirArtigoCompleto('<%= escape(JSON.stringify(noticia)) %>')">
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="gazeta-category-pill bg-slate-100 text-slate-700">
+                      <%= noticia.categoria %>
+                    </span>
+                    <% const conf = Math.round((noticia.confiabilidade || 1) * 100); %>
+                    <span class="text-[10px] font-mono <%= conf >= 85 ? 'text-emerald-700' : (conf >= 65 ? 'text-amber-700' : 'text-rose-700') %>">
+                      ● <%= conf %>% Confiabilidade
+                    </span>
+                  </div>
+
+                  <h3 class="text-base font-bold font-editorial text-slate-900 leading-snug hover:text-blue-700 transition">
+                    <%= noticia.titulo %>
+                  </h3>
+
+                  <p class="text-xs font-editorial text-slate-600 leading-relaxed line-clamp-3">
+                    <%= noticia.texto %>
+                  </p>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                  <span>Efeito: <strong class="text-slate-700 capitalize"><%= noticia.tipo_efeito %></strong></span>
+                  <span><%= noticia.duracao_rodadas || 1 %> tri.</span>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="app-card p-8 text-center text-xs text-slate-400 font-mono">
+            Nenhum despacho publicado para este caderno nesta rodada.
+          </div>
+        <% } %>
+      </div>
+
+      <!-- SEÇÃO DO ARQUIVO HISTÓRICO (NOTÍCIAS PASSADAS) -->
+      <div id="secao-arquivo-historico" class="space-y-4 pt-6 border-t border-slate-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900 font-editorial">
+              Arquivo Histórico das Rodadas Anteriores
+            </h3>
+            <p class="text-xs text-slate-500">
+              Consulte como os eventos passados moldaram o mercado atual e correlacione com seus dados no Power BI.
+            </p>
+          </div>
+          <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded">
+            <%= typeof noticiasPassadas !== 'undefined' ? noticiasPassadas.length : 0 %> Edições Arquivadas
+          </span>
+        </div>
+
+        <% if (typeof noticiasPassadas !== 'undefined' && noticiasPassadas.length > 0) { %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <% noticiasPassadas.forEach(antiga => { %>
+              <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-slate-300 transition space-y-2 cursor-pointer" onclick="abrirArtigoCompleto('<%= escape(JSON.stringify(antiga)) %>')">
+                <div class="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                  <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-bold">RODADA <%= antiga.rodada_publicacao %></span>
+                  <span class="uppercase"><%= antiga.categoria %></span>
+                </div>
+                <h4 class="text-xs font-bold text-slate-800 line-clamp-2 font-editorial">
+                  <%= antiga.titulo %>
+                </h4>
+                <p class="text-[11px] text-slate-500 line-clamp-2">
+                  <%= antiga.texto %>
+                </p>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-lg">
+            Estamos na primeira rodada da simulação. O arquivo histórico será preenchido conforme as próximas rodadas forem publicadas pelo professor.
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+
+    <!-- COLUNA LATERAL: TERMINAL FINANCEIRO & BARÔMETRO DE MERCADO (4 Colunas) -->
+    <div class="lg:col-span-4 space-y-6">
+
+      <!-- WIDGET 1: COTAÇÕES DO TERMINAL AURORA (INVESTING STYLE) -->
+      <div class="app-card overflow-hidden">
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h3 class="text-xs font-bold tracking-wider uppercase font-mono">Terminal Financeiro Aurora</h3>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">Porto Aurora 2031</span>
+        </div>
+
+        <div class="divide-y divide-slate-100 text-xs">
+          
+          <div class="p-3 flex items-center justify-between hover:bg-slate-50 transition">
+            <span class="text-slate-600">Taxa Selic Anual</span>
+            <div class="text-right font-mono">
+              <span class="font-bold text-slate-900"><%= macroData.selic %>%</span>
+              <span class="text-[10px] text-slate-400 ml-1">a.a.</span>
+            </div>
+          </div>
+
+          <div class="p-3 flex items-center justify-between hover:bg-slate-50 transition">
+            <span class="text-slate-600">Câmbio Dólar Ptax</span>
+            <div class="text-right font-mono">
+              <span class="font-bold text-slate-900">R$ <%= macroData.cambio.toFixed(2) %></span>
+              <span class="text-[10px] <%= macroData.cambio >= 5.20 ? 'text-rose-600' : 'text-emerald-600' %> ml-1">
+                <%= macroData.cambio >= 5.20 ? '▲' : '▼' %>
+              </span>
+            </div>
+          </div>
+
+          <div class="p-3 flex items-center justify-between hover:bg-slate-50 transition">
+            <span class="text-slate-600">Crescimento do PIB</span>
+            <div class="text-right font-mono">
+              <span class="font-bold <%= macroData.pibCrescimento >= 0 ? 'text-emerald-600' : 'text-rose-600' %>">
+                <%= macroData.pibCrescimento >= 0 ? '+' : '' %><%= macroData.pibCrescimento %>%
+              </span>
+            </div>
+          </div>
+
+          <div class="p-3 flex items-center justify-between hover:bg-slate-50 transition">
+            <span class="text-slate-600">Inflação IPCA Projetada</span>
+            <div class="text-right font-mono">
+              <span class="font-bold text-slate-900"><%= macroData.inflacao %>%</span>
+            </div>
+          </div>
+
+          <div class="p-3 flex items-center justify-between hover:bg-slate-50 transition">
+            <span class="text-slate-600">Salário Médio Regional</span>
+            <div class="text-right font-mono">
+              <span class="font-bold text-slate-900">R$ <%= Math.round(macroData.salarioMedio || 3200).toLocaleString('pt-BR') %></span>
+            </div>
+          </div>
+
+          <div class="p-3 flex items-center justify-between hover:bg-slate-50 transition">
+            <span class="text-slate-600">Alíquota Tributária Efetiva</span>
+            <div class="text-right font-mono">
+              <span class="font-bold text-slate-900"><%= Math.round((macroData.aliquotaImposto || 0.12) * 100) %>%</span>
+            </div>
+          </div>
+
+          <div class="p-3 flex items-center justify-between hover:bg-slate-50 transition">
+            <span class="text-slate-600">Fator de Sazonalidade</span>
+            <div class="text-right font-mono">
+              <span class="font-bold text-blue-600"><%= macroData.sazonalidade %>x</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="p-3 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-500 font-mono flex items-center justify-between">
+          <span>Banco Central de Aurora</span>
+          <a href="/sala/<%= currentRoom.id %>/powerbi" class="text-blue-600 hover:underline">Ver no Power BI →</a>
+        </div>
+      </div>
+
+      <!-- WIDGET 2: BARÔMETRO DE FACT-CHECKING E RUMORES -->
+      <div class="app-card p-5 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">
+            Barômetro de Inteligência
+          </h3>
+          <span class="badge-status badge-status-neutral text-[10px]">Fact-Check</span>
+        </div>
+
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Nem todo boato se confirma. Modelos de regressão e compras baseados em notícias com baixa confiabilidade podem gerar estoques ociosos ou perda de margem.
+        </p>
+
+        <!-- Indicador de Certeza Estatística -->
+        <div class="space-y-1.5 pt-1">
+          <div class="flex justify-between text-[11px] font-mono">
+            <span class="text-slate-600">Índice Médio de Confiabilidade:</span>
+            <% 
+              let mediaConf = 0;
+              if (typeof noticiasRodada !== 'undefined' && noticiasRodada.length > 0) {
+                const soma = noticiasRodada.reduce((acc, n) => acc + (n.confiabilidade || 1), 0);
+                mediaConf = Math.round((soma / noticiasRodada.length) * 100);
+              } else {
+                mediaConf = 85;
+              }
+            %>
+            <strong class="<%= mediaConf >= 80 ? 'text-emerald-600' : 'text-amber-600' %>"><%= mediaConf %>%</strong>
+          </div>
+          
+          <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-slate-900 rounded-full transition-all duration-500" style="width: <%= mediaConf %>%"></div>
+          </div>
+          
+          <div class="flex justify-between text-[10px] text-slate-400 font-mono pt-0.5">
+            <span>0% (Puro Boato)</span>
+            <span>100% (Fato Verificado)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- WIDGET 3: COLUNA DO ECONOMISTA-CHEFE (EDITORIAL ASSINADO) -->
+      <div class="app-card p-5 space-y-3 bg-[#FAF9F6] border-amber-200">
+        <div class="flex items-center gap-2 border-b border-amber-200/80 pb-2">
+          <div class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-serif font-bold">
+            HA
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-900">Coluna do Economista-Chefe</div>
+            <div class="text-[10px] text-slate-500">Dr. Hélio Albuquerque • Observatório</div>
+          </div>
+        </div>
+
+        <h4 class="text-sm font-bold font-editorial text-slate-900 leading-snug">
+          "Ato <%= currentRoom.rodada_atual <= 4 ? 'I: Aprendizado e Tração' : (currentRoom.rodada_atual <= 8 ? 'II: Expansão Agressiva' : 'III: Turbulência e Risco') %>: Como calibrar preço e compras"
+        </h4>
+
+        <p class="text-xs font-editorial text-slate-700 leading-relaxed">
+          "<%= macroData.ato.descricao %> As equipes vencedoras em Porto Aurora são aquelas que não se deixam enganar por flutuações temporárias e alinham o preço de venda às oscilações cambiais e aos gargalos portuários."
+        </p>
+
+        <div class="pt-2 border-t border-amber-200/60 flex justify-between items-center text-[11px]">
+          <span class="text-slate-400 font-mono">Edição R<%= currentRoom.rodada_atual %></span>
+          <button type="button" onclick="abrirGuiaEconomico()" class="text-blue-700 font-semibold hover:underline">
+            Ler Diretrizes →
+          </button>
+        </div>
+      </div>
+
+      <!-- WIDGET 4: CALL TO ACTION PARA DECISÕES -->
+      <div class="app-card p-5 bg-slate-900 text-white space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Próximo Passo</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        </div>
+        
+        <h4 class="text-sm font-bold tracking-tight">
+          Pronto para formular a estratégia da sua equipe?
+        </h4>
+        
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Use os dados da Gazeta para decidir o preço de venda, compras de estoque e financiamentos para a Rodada <%= currentRoom.rodada_atual %>.
+        </p>
+
+        <a href="/sala/<%= currentRoom.id %>/decisoes" class="btn-primary w-full text-center text-xs bg-white text-slate-900 hover:bg-slate-100 font-bold py-2">
+          Ir ao Painel de Decisões →
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// Garante disponibilidade do Side Sheet do Aurora Lab mesmo com extensões ou atrasos de carregamento
+function abrirSideSheet(titulo, htmlContent) {
+  if (typeof window.abrirSideSheet === 'function' && window.abrirSideSheet !== abrirSideSheet) {
+    return window.abrirSideSheet(titulo, htmlContent);
+  }
+  const backdrop = document.getElementById('side-sheet-backdrop');
+  const panel = document.getElementById('side-sheet-panel');
+  const titleEl = document.getElementById('side-sheet-title');
+  const contentEl = document.getElementById('side-sheet-content');
+
+  if (!panel || !backdrop) return;
+  if (titleEl) titleEl.textContent = titulo;
+  if (contentEl) contentEl.innerHTML = htmlContent;
+
+  backdrop.classList.add('active');
+  if (typeof gsap !== 'undefined') {
+    gsap.to(panel, { x: 0, duration: 0.28, ease: 'power2.out' });
+  } else {
+    panel.style.transform = 'translateX(0)';
+  }
+}
+
+function fecharSideSheet() {
+  if (typeof window.fecharSideSheet === 'function' && window.fecharSideSheet !== fecharSideSheet) {
+    return window.fecharSideSheet();
+  }
+  const backdrop = document.getElementById('side-sheet-backdrop');
+  const panel = document.getElementById('side-sheet-panel');
+  if (!panel || !backdrop) return;
+  backdrop.classList.remove('active');
+  if (typeof gsap !== 'undefined') {
+    gsap.to(panel, { x: '100%', duration: 0.22, ease: 'power2.in' });
+  } else {
+    panel.style.transform = 'translateX(100%)';
+  }
+}
+
+// Filtrar matérias por caderno editorial
+function filtrarNoticias(categoria) {
+  const botoes = document.querySelectorAll('.caderno-btn');
+  botoes.forEach(b => {
+    b.classList.remove('active', 'bg-slate-100', 'text-slate-900');
+    b.classList.add('text-slate-600');
+  });
+
+  const btnAtivo = document.getElementById(`caderno-${categoria}`);
+  if (btnAtivo) {
+    btnAtivo.classList.add('active', 'bg-slate-100', 'text-slate-900');
+    btnAtivo.classList.remove('text-slate-600');
+  }
+
+  const items = document.querySelectorAll('.noticia-item');
+  const secaoArquivo = document.getElementById('secao-arquivo-historico');
+  const contador = document.getElementById('noticias-contador');
+
+  if (categoria === 'arquivo') {
+    // Foca na seção histórica
+    if (secaoArquivo) {
+      secaoArquivo.scrollIntoView({ behavior: 'smooth' });
+    }
+    return;
+  }
+
+  let visiveis = 0;
+  items.forEach(card => {
+    if (categoria === 'todas' || card.dataset.categoria === categoria) {
+      card.style.display = 'flex';
+      visiveis++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  if (contador) {
+    contador.textContent = `${visiveis} publicados`;
+  }
+}
+
+// Abrir Leitor Editorial em Side Sheet
+function abrirArtigoCompleto(noticiaEscapada) {
+  try {
+    const noticia = JSON.parse(unescape(noticiaEscapada));
+    const conf = Math.round((noticia.confiabilidade || 1) * 100);
+
+    const html = `
+      <div class="space-y-5 text-xs font-editorial">
+        <div class="space-y-1.5 border-b border-slate-200 pb-4">
+          <div class="flex items-center justify-between text-[11px] font-mono">
+            <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded uppercase font-bold">
+              ${noticia.categoria}
+            </span>
+            <span class="font-bold ${conf >= 85 ? 'text-emerald-700' : (conf >= 65 ? 'text-amber-700' : 'text-rose-700')}">
+              ${conf}% Confiabilidade Estatística
+            </span>
+          </div>
+
+          <h2 class="text-xl font-bold font-editorial text-slate-950 leading-snug pt-1">
+            ${noticia.titulo}
+          </h2>
+
+          <div class="text-[11px] text-slate-400 font-mono flex items-center gap-2">
+            <span>Rodada ${noticia.rodada_publicacao || 1}</span>
+            <span>•</span>
+            <span>Porto Aurora 2031</span>
+            <span>•</span>
+            <span>Despacho Editorial</span>
+          </div>
+        </div>
+
+        <div class="gazeta-dropcap text-sm text-slate-700 leading-relaxed">
+          ${noticia.texto}
+        </div>
+
+        <!-- Parecer Técnico de Impacto -->
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5 font-sans">
+          <div class="font-bold text-slate-900 text-xs flex items-center justify-between">
+            <span>Parâmetros de Impacto Econômico</span>
+            <span class="text-[10px] font-mono text-slate-500">Motor de Simulação</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+            <div class="p-2 bg-white rounded border border-slate-200">
+              <span class="text-slate-400 block text-[10px]">TIPO DE EFEITO</span>
+              <strong class="text-slate-800 capitalize">${noticia.tipo_efeito}</strong>
+            </div>
+            <div class="p-2 bg-white rounded border border-slate-200">
+              <span class="text-slate-400 block text-[10px]">DURAÇÃO ESTIMADA</span>
+              <strong class="text-slate-800">${noticia.duracao_rodadas || 1} Trimestre(s)</strong>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-600 leading-relaxed pt-1">
+            <strong>Recomendação às Diretorias:</strong>
+            ${
+              noticia.tipo_efeito === 'demanda'
+                ? 'Ajuste sua previsão de vendas e compra programada de suprimentos. Demanda aquecida ou retraída influencia diretamente a queima de estoque.'
+                : noticia.tipo_efeito === 'custo'
+                ? 'Monitore a margem bruta. Se o custo unitário subir, avalie se compensa repassar o valor ao consumidor ou absorver para sustentar volume.'
+                : noticia.tipo_efeito === 'elasticidade'
+                ? 'Atenção redobrada na precificação do CMO. A reação dos compradores a aumentos de preço será mais volátil durante a vigência desta notícia.'
+                : 'Analise o fluxo de caixa com o CFO para garantir liquidez corrente suficiente.'
+            }
+          </div>
+        </div>
+
+        <div class="pt-2 text-center font-sans">
+          <a href="/sala/<%= currentRoom.id %>/decisoes" class="btn-primary w-full text-center text-xs">
+            Ir para a Tomada de Decisões →
+          </a>
+        </div>
+      </div>
+    `;
+
+    abrirSideSheet('Gazeta Aurora • Artigo Completo', html);
+  } catch (err) {
+    console.error('Erro ao abrir artigo:', err);
+  }
+}
+
+// Side Sheet de Diretrizes do Economista-Chefe
+function abrirGuiaEconomico() {
+  const html = `
+    <div class="space-y-4 text-xs font-sans">
+      <div>
+        <h3 class="font-bold text-slate-900 text-sm">Diretrizes Macroeconômicas de Porto Aurora</h3>
+        <p class="text-slate-500 mt-0.5">Orientações para a Rodada <%= currentRoom.rodada_atual %> (<%= macroData.ato.nome %>):</p>
+      </div>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+        <div class="font-bold text-slate-900">Dinâmica da Demanda & Sazonalidade</div>
+        <p class="text-slate-600 leading-relaxed text-[11px]">
+          Neste trimestre, o fator sazonal é de <strong><%= macroData.sazonalidade %>x</strong>. Se a sazonalidade for superior a 1.0x, a demanda natural do mercado estará aquecida; se inferior, o consumo recuará moderadamente.
+        </p>
+      </div>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+        <div class="font-bold text-slate-900">Custos de Insumos & Taxa Cambial</div>
+        <p class="text-slate-600 leading-relaxed text-[11px]">
+          Com o câmbio em <strong>R$ <%= macroData.cambio.toFixed(2) %></strong>, insumos importados sofrem fator de ajuste. Lotes normais custam R$ 35,00/un, mas compras urgentes custam R$ 45,50/un (+30%).
+        </p>
+      </div>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+        <div class="font-bold text-slate-900">Crédito Bancário & Liquidez</div>
+        <p class="text-slate-600 leading-relaxed text-[11px]">
+          A Taxa Selic está em <strong><%= macroData.selic %>% ao ano</strong> (<%= macroData.selicTrimestral %>% no trimestre). Empréstimos tomados com o Banco Aurora cobrarão juros proporcionais ao Rating de Crédito da sua empresa.
+        </p>
+      </div>
+    </div>
+  `;
+  abrirSideSheet('Diretrizes Econômicas', html);
+}
+</script>

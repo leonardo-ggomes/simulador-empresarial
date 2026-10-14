@@ -1,0 +1,573 @@
+<!-- Aurora Business Lab - Ranking Executivo das Empresas (Porto Aurora 2031) -->
+<!-- Padrão visual: Minimalista, slim, limpo e editorial (Linear / Raycast / Apple) -->
+
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
+
+  <!-- Cabeçalho Slim com Breadcrumb e Metadados -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+    <div>
+      <div class="flex items-center gap-2 text-[11px] text-slate-400 font-medium mb-1">
+        <span><%= currentRoom.nome %></span>
+        <span>/</span>
+        <span class="text-slate-600">Governança & Desempenho</span>
+        <span>/</span>
+        <span class="text-slate-900 font-semibold">Ranking Corporativo</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Classificação das Empresas</h1>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <%= rankingData.isCumulative ? 'Geral Acumulado' : 'Rodada ' + rankingData.rodadaApurada %>
+        </span>
+      </div>
+      <p class="text-xs text-slate-500 mt-1 max-w-2xl">
+        Apuração ponderada de desempenho corporativo: <strong>50% Financeiro</strong> (Lucro, Caixa e PL), <strong>20% Mercado</strong> (Market share e atendimento) e <strong>30% Governança</strong> (Rating e crédito Banco Aurora).
+      </p>
+    </div>
+
+    <!-- Controles Rápidos: Seletor de Rodada e Filtro Instantâneo -->
+    <div class="flex flex-wrap items-center gap-2.5">
+      <!-- Seletor Slim de Rodadas -->
+      <div class="inline-flex items-center p-0.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-medium">
+        <a href="/sala/<%= currentRoom.id %>/ranking?rodada=acumulado"
+           class="px-2.5 py-1 rounded-md transition <%= rankingData.isCumulative ? 'bg-white text-slate-900 shadow-xs font-semibold' : 'text-slate-600 hover:text-slate-900' %>">
+          Acumulado
+        </a>
+        <% if (rankingData.completedRounds && rankingData.completedRounds.length > 0) { %>
+          <% rankingData.completedRounds.forEach(r => { %>
+            <a href="/sala/<%= currentRoom.id %>/ranking?rodada=<%= r %>"
+               class="px-2.5 py-1 rounded-md transition <%= !rankingData.isCumulative && rankingData.rodadaApurada === r ? 'bg-white text-slate-900 shadow-xs font-semibold' : 'text-slate-600 hover:text-slate-900' %>">
+              R<%= r %>
+            </a>
+          <% }) %>
+        <% } %>
+      </div>
+
+      <!-- Barra de Busca Instantânea -->
+      <div class="relative">
+        <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <input type="text"
+               id="filtro-ranking"
+               placeholder="Buscar empresa ou CNPJ..."
+               class="pl-8 pr-3 py-1 text-xs rounded-md bg-white border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-900 w-44 transition focus:w-56"
+               onkeyup="filtrarTabelaRanking()" />
+      </div>
+    </div>
+  </div>
+
+  <% if (rankingData.rodadaApurada === 0) { %>
+    <!-- Alerta Inicial: Rodada 1 em Andamento (Sem simulação ainda) -->
+    <div class="app-card p-4 bg-amber-50/40 border-amber-200/80 rounded-xl flex items-start gap-3">
+      <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700 shrink-0 text-sm font-bold">
+        ℹ
+      </div>
+      <div class="space-y-0.5 text-xs text-amber-900">
+        <h3 class="font-bold">Primeiro Trimestre em Planejamento (Rodada 1)</h3>
+        <p class="text-amber-800/90 leading-relaxed">
+          Nenhuma rodada foi apurada até o momento. As <%= rankingData.empresas.length %> empresas da sala iniciam com o Capital Social integralizado de <strong>R$ 80.000,00</strong> e Rating Aurora <strong>A</strong>. Assim que o professor processar a primeira rodada, o ranking atualizará automaticamente.
+        </p>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- PÓDIO TOP 3 (Cards Slim Minimalistas) -->
+  <% if (rankingData.top3 && rankingData.top3.length > 0) { %>
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Líderes de Desempenho</span>
+          <span class="text-[11px] text-slate-400 font-mono">• Top 3 Corporativo</span>
+        </div>
+        <div class="text-[11px] text-slate-400">
+          Total de Empresas: <strong class="text-slate-700"><%= rankingData.estatisticas.totalEmpresas %></strong>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <% rankingData.top3.forEach((emp, index) => { %>
+          <% 
+            const isUserTeam = currentTeam && currentTeam.id === emp.equipe.id;
+            const medals = [
+              { label: '1º Lugar', bg: 'bg-amber-500/10 text-amber-800 border-amber-300/70', badge: 'bg-amber-400 text-amber-950', ring: 'ring-amber-400/30' },
+              { label: '2º Lugar', bg: 'bg-slate-500/10 text-slate-800 border-slate-300/70', badge: 'bg-slate-300 text-slate-900', ring: 'ring-slate-300/30' },
+              { label: '3º Lugar', bg: 'bg-orange-500/10 text-orange-800 border-orange-300/70', badge: 'bg-orange-300 text-orange-950', ring: 'ring-orange-300/30' }
+            ];
+            const medal = medals[index] || medals[1];
+          %>
+          <div class="app-card relative p-4 flex flex-col justify-between transition hover:shadow-sm <%= isUserTeam ? 'border-blue-400/80 bg-blue-50/20' : '' %>">
+            
+            <!-- Topo do Card: Posição, Tag e Score -->
+            <div>
+              <div class="flex items-center justify-between mb-2.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold <%= medal.bg %> border">
+                    #<%= emp.posicao %> <%= medal.label %>
+                  </span>
+                  <% if (isUserTeam) { %>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800">
+                      Sua Empresa
+                    </span>
+                  <% } %>
+                </div>
+
+                <!-- Score Global -->
+                <div class="text-right">
+                  <div class="text-lg font-bold tabular-nums text-slate-900 leading-none">
+                    <%= emp.scores.geral.toFixed(1) %>
+                    <span class="text-[10px] font-medium text-slate-400">pts</span>
+                  </div>
+                  <div class="text-[9px] text-slate-400 font-medium">Score Global</div>
+                </div>
+              </div>
+
+              <!-- Identificação da Empresa -->
+              <div class="flex items-center gap-2.5 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                  <%= emp.equipe.nome.substring(0, 2).toUpperCase() %>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-sm font-semibold text-slate-900 truncate tracking-tight leading-tight">
+                    <%= emp.equipe.nome %>
+                  </h3>
+                  <div class="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono truncate mt-0.5">
+                    <span><%= emp.equipe.setor %></span>
+                    <span>•</span>
+                    <span>CNPJ: <%= emp.equipe.cnpj %></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Barras Slim dos 3 Pilares -->
+              <div class="space-y-1.5 py-2.5 border-y border-slate-100 text-[11px]">
+                <div>
+                  <div class="flex justify-between text-slate-500 mb-0.5">
+                    <span>Financeiro (50%)</span>
+                    <span class="font-mono font-medium text-slate-800 tabular-nums"><%= emp.scores.financeiro.toFixed(1) %> pts</span>
+                  </div>
+                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-slate-900 h-full rounded-full" style="width: <%= emp.scores.financeiro %>%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-slate-500 mb-0.5">
+                    <span>Mercado (20%)</span>
+                    <span class="font-mono font-medium text-slate-800 tabular-nums"><%= emp.scores.mercado.toFixed(1) %> pts</span>
+                  </div>
+                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-blue-600 h-full rounded-full" style="width: <%= emp.scores.mercado %>%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-slate-500 mb-0.5">
+                    <span>Governança & Risco (30%)</span>
+                    <span class="font-mono font-medium text-slate-800 tabular-nums"><%= emp.scores.analitico.toFixed(1) %> pts</span>
+                  </div>
+                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-emerald-600 h-full rounded-full" style="width: <%= emp.scores.analitico %>%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Micro-KPIs Financeiros & Operacionais -->
+              <div class="grid grid-cols-3 gap-2 py-2.5 text-center">
+                <div class="p-1.5 rounded bg-slate-50">
+                  <div class="text-[10px] text-slate-400 uppercase font-medium">Lucro Líq.</div>
+                  <div class="text-xs font-semibold tabular-nums mt-0.5 <%= emp.metricas.lucroAcumulado >= 0 ? 'text-emerald-700' : 'text-rose-600' %>">
+                    <%= emp.metricas.lucroAcumulado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) %>
+                  </div>
+                </div>
+                <div class="p-1.5 rounded bg-slate-50">
+                  <div class="text-[10px] text-slate-400 uppercase font-medium">Caixa</div>
+                  <div class="text-xs font-semibold tabular-nums text-slate-800 mt-0.5">
+                    <%= emp.metricas.caixaAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) %>
+                  </div>
+                </div>
+                <div class="p-1.5 rounded bg-slate-50">
+                  <div class="text-[10px] text-slate-400 uppercase font-medium">Rating</div>
+                  <div class="text-xs font-bold text-blue-700 mt-0.5">
+                    <%= emp.metricas.ratingCredito %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão Inspecionar -->
+            <button onclick="abrirRaioXEquipe('<%= escape(JSON.stringify(emp)) %>')"
+                    class="w-full btn-secondary text-xs py-1.5 mt-2 flex items-center justify-center gap-1.5 font-medium">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+              Inspecionar Raio-X
+            </button>
+
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- TABELA EDITORIAL DE CLASSIFICAÇÃO (Slim & Minimalista) -->
+  <div class="app-card overflow-hidden">
+    <!-- Header da Tabela com Legenda e Controles -->
+    <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/50">
+      <div>
+        <h2 class="text-sm font-bold text-slate-900 tracking-tight">Tabela Geral de Governança</h2>
+        <p class="text-[11px] text-slate-500">Métricas consolidadas de todas as equipes ativas em Porto Aurora</p>
+      </div>
+
+      <div class="flex items-center gap-3 text-[11px] text-slate-500 font-mono">
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> ▲ Subiu</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> ▼ Desceu</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-300"></span> • Manteve</span>
+      </div>
+    </div>
+
+    <!-- Tabela Responsiva Slim -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs border-collapse" id="ranking-table">
+        <thead>
+          <tr class="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+            <th class="py-2.5 px-3 w-16 text-center">Pos</th>
+            <th class="py-2.5 px-4 min-w-[200px]">Empresa</th>
+            <th class="py-2.5 px-3 min-w-[140px]">Score Global</th>
+            <th class="py-2.5 px-3 text-right">Lucro Acumulado</th>
+            <th class="py-2.5 px-3 text-right">Caixa Líquido</th>
+            <th class="py-2.5 px-3 text-center">Mkt Share</th>
+            <th class="py-2.5 px-3 text-center">Rating</th>
+            <th class="py-2.5 px-3 text-center">Solvência</th>
+            <th class="py-2.5 px-3 text-center w-20">Ação</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <% rankingData.empresas.forEach(emp => { %>
+            <% const isUser = currentTeam && currentTeam.id === emp.equipe.id; %>
+            <tr class="hover:bg-slate-50/80 transition-colors ranking-row <%= isUser ? 'bg-blue-50/30' : '' %>"
+                data-nome="<%= emp.equipe.nome.toLowerCase() %>"
+                data-cnpj="<%= emp.equipe.cnpj.toLowerCase() %>">
+              
+              <!-- Posição e Delta -->
+              <td class="py-3 px-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <span class="font-bold text-xs text-slate-900 tabular-nums">#<%= emp.posicao %></span>
+                  <% if (emp.variacao > 0) { %>
+                    <span class="text-[10px] text-emerald-600 font-bold flex items-center" title="Subiu <%= emp.variacao %> posições">
+                      ▲<%= emp.variacao %>
+                    </span>
+                  <% } else if (emp.variacao < 0) { %>
+                    <span class="text-[10px] text-rose-600 font-bold flex items-center" title="Caiu <%= Math.abs(emp.variacao) %> posições">
+                      ▼<%= Math.abs(emp.variacao) %>
+                    </span>
+                  <% } else { %>
+                    <span class="text-slate-300 text-xs leading-none" title="Posição inalterada">•</span>
+                  <% } %>
+                </div>
+              </td>
+
+              <!-- Empresa & CNPJ -->
+              <td class="py-3 px-4">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-[11px] shrink-0">
+                    <%= emp.equipe.nome.substring(0, 2).toUpperCase() %>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-semibold text-slate-900 truncate"><%= emp.equipe.nome %></span>
+                      <% if (isUser) { %>
+                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-100 text-blue-700">VOCÊ</span>
+                      <% } %>
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-mono truncate">
+                      CNPJ: <%= emp.equipe.cnpj %>
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Score Global com Barra Slim -->
+              <td class="py-3 px-3">
+                <div class="space-y-1">
+                  <div class="flex justify-between items-center text-[11px]">
+                    <span class="font-bold text-slate-900 tabular-nums"><%= emp.scores.geral.toFixed(1) %></span>
+                    <span class="text-[10px] text-slate-400">/ 100</span>
+                  </div>
+                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full <%= emp.scores.geral >= 75 ? 'bg-emerald-600' : (emp.scores.geral >= 50 ? 'bg-blue-600' : 'bg-amber-500') %>"
+                         style="width: <%= emp.scores.geral %>%"></div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Lucro Líquido Acumulado -->
+              <td class="py-3 px-3 text-right font-mono font-medium tabular-nums <%= emp.metricas.lucroAcumulado >= 0 ? 'text-emerald-700' : 'text-rose-600' %>">
+                <%= emp.metricas.lucroAcumulado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %>
+              </td>
+
+              <!-- Caixa Líquido -->
+              <td class="py-3 px-3 text-right font-mono font-medium tabular-nums text-slate-800">
+                <%= emp.metricas.caixaAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %>
+              </td>
+
+              <!-- Market Share Médio -->
+              <td class="py-3 px-3 text-center font-mono tabular-nums text-slate-700">
+                <%= emp.metricas.marketShareMedio.toFixed(1) %>%
+              </td>
+
+              <!-- Rating Aurora -->
+              <td class="py-3 px-3 text-center">
+                <% 
+                  let ratingClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                  if (['AAA', 'AA'].includes(emp.metricas.ratingCredito)) ratingClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                  else if (['BBB', 'BB'].includes(emp.metricas.ratingCredito)) ratingClass = 'bg-slate-100 text-slate-700 border-slate-200';
+                  else if (['B', 'CCC'].includes(emp.metricas.ratingCredito)) ratingClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                  else if (['D', 'E'].includes(emp.metricas.ratingCredito)) ratingClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                %>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border <%= ratingClass %>">
+                  <%= emp.metricas.ratingCredito %>
+                </span>
+              </td>
+
+              <!-- Solvência -->
+              <td class="py-3 px-3 text-center">
+                <% if (emp.metricas.statusSolvencia === 'Saudável') { %>
+                  <span class="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Saudável
+                  </span>
+                <% } else if (emp.metricas.statusSolvencia === 'Alerta') { %>
+                  <span class="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    Alerta
+                  </span>
+                <% } else { %>
+                  <span class="inline-flex items-center gap-1 text-[10px] font-medium text-rose-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                    Insolvente
+                  </span>
+                <% } %>
+              </td>
+
+              <!-- Ação: Raio-X -->
+              <td class="py-3 px-3 text-center">
+                <button onclick="abrirRaioXEquipe('<%= escape(JSON.stringify(emp)) %>')"
+                        class="p-1 rounded hover:bg-slate-200/60 text-slate-500 hover:text-slate-900 transition"
+                        title="Abrir Raio-X da Empresa">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </button>
+              </td>
+
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Rodapé da Tabela: Estatísticas Rápidas -->
+    <div class="p-3 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-500 gap-2">
+      <div class="flex items-center gap-4">
+        <span>Empresas Avaliadas: <strong class="text-slate-800"><%= rankingData.estatisticas.totalEmpresas %></strong></span>
+        <span>•</span>
+        <span>Lucro Médio Geral: <strong class="text-slate-800 tabular-nums"><%= rankingData.estatisticas.lucroMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></span>
+      </div>
+      <div>
+        <span>Líder de Mercado: <strong class="text-slate-800"><%= rankingData.estatisticas.empresaLider %></strong> (<%= rankingData.estatisticas.marketShareLider.toFixed(1) %>%)</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Script de Interação: Filtro Instantâneo e Abertura do Side Sheet -->
+<script>
+function filtrarTabelaRanking() {
+  const query = (document.getElementById('filtro-ranking')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.ranking-row');
+  rows.forEach(row => {
+    const nome = row.getAttribute('data-nome') || '';
+    const cnpj = row.getAttribute('data-cnpj') || '';
+    if (!query || nome.includes(query) || cnpj.includes(query)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+function abrirRaioXEquipe(empresaEscaped) {
+  try {
+    const emp = JSON.parse(unescape(empresaEscaped));
+    const eq = emp.equipe;
+    const m = emp.metricas;
+    const sc = emp.scores;
+
+    let membrosHtml = '';
+    if (eq.membros && eq.membros.length > 0) {
+      membrosHtml = eq.membros.map(mb => `
+        <div class="flex items-center justify-between py-1.5 border-b border-slate-100 text-xs">
+          <div>
+            <span class="font-medium text-slate-900">${mb.nome}</span>
+            <span class="text-[10px] text-slate-400 ml-1">(${mb.email || ''})</span>
+          </div>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${mb.papel || 'Membro'}</span>
+        </div>
+      `).join('');
+    } else {
+      membrosHtml = '<p class="text-xs text-slate-400 py-2">Nenhum membro registrado formalmente.</p>';
+    }
+
+    let historicoHtml = '';
+    if (emp.historicoRodadas && emp.historicoRodadas.length > 0) {
+      historicoHtml = `
+        <div class="overflow-x-auto mt-2">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-slate-200 text-[10px] text-slate-400 uppercase">
+                <th class="py-1">Rodada</th>
+                <th class="py-1 text-right">Lucro Líq.</th>
+                <th class="py-1 text-right">Caixa</th>
+                <th class="py-1 text-center">Share</th>
+                <th class="py-1 text-center">Rating</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-mono">
+              ${emp.historicoRodadas.map(h => `
+                <tr>
+                  <td class="py-1 text-slate-800 font-bold">R${h.rodada}</td>
+                  <td class="py-1 text-right ${h.lucroLiquido >= 0 ? 'text-emerald-700' : 'text-rose-600'}">
+                    ${Number(h.lucroLiquido).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                  </td>
+                  <td class="py-1 text-right text-slate-700">
+                    ${Number(h.caixa).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                  </td>
+                  <td class="py-1 text-center text-slate-700">${Number(h.marketShare).toFixed(1)}%</td>
+                  <td class="py-1 text-center text-blue-700 font-bold">${h.rating}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      historicoHtml = '<p class="text-xs text-slate-400 py-2">Sem rodadas finalizadas no histórico.</p>';
+    }
+
+    const contentHtml = `
+      <div class="space-y-5 text-slate-800">
+        
+        <!-- Header da Empresa no Side Sheet -->
+        <div class="flex items-start gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="w-10 h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm shrink-0">
+            ${eq.nome.substring(0, 2).toUpperCase()}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-sm text-slate-900 truncate">${eq.nome}</h3>
+              <span class="text-xs font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">#${emp.posicao} Geral</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5">${eq.slogan}</p>
+            <div class="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-1">
+              <span>CNPJ: ${eq.cnpj}</span>
+              <span>•</span>
+              <span>${eq.setor}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scorecard Geral -->
+        <div class="p-3.5 border border-slate-200 rounded-lg space-y-2">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Scorecard Ponderado</span>
+            <span class="text-base font-bold text-slate-900 font-mono tabular-nums">${sc.geral.toFixed(1)} pts</span>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <div>
+              <div class="flex justify-between text-slate-600 mb-0.5">
+                <span>1. Pilar Financeiro (50%)</span>
+                <span class="font-bold text-slate-900">${sc.financeiro.toFixed(1)} / 100</span>
+              </div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-slate-900 h-full rounded-full" style="width: ${sc.financeiro}%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-600 mb-0.5">
+                <span>2. Pilar Mercado (20%)</span>
+                <span class="font-bold text-slate-900">${sc.mercado.toFixed(1)} / 100</span>
+              </div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-blue-600 h-full rounded-full" style="width: ${sc.mercado}%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-600 mb-0.5">
+                <span>3. Pilar Governança & Risco (30%)</span>
+                <span class="font-bold text-slate-900">${sc.analitico.toFixed(1)} / 100</span>
+              </div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-600 h-full rounded-full" style="width: ${sc.analitico}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicadores Financeiros Sintéticos -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Métricas de Performance</h4>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2.5 rounded bg-slate-50 border border-slate-100">
+              <span class="text-[10px] text-slate-400 uppercase font-medium">Lucro Acumulado</span>
+              <div class="font-bold font-mono text-sm mt-0.5 ${m.lucroAcumulado >= 0 ? 'text-emerald-700' : 'text-rose-600'}">
+                ${m.lucroAcumulado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded bg-slate-50 border border-slate-100">
+              <span class="text-[10px] text-slate-400 uppercase font-medium">Caixa Líquido</span>
+              <div class="font-bold font-mono text-sm mt-0.5 text-slate-800">
+                ${m.caixaAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded bg-slate-50 border border-slate-100">
+              <span class="text-[10px] text-slate-400 uppercase font-medium">Market Share Médio</span>
+              <div class="font-bold font-mono text-sm mt-0.5 text-slate-800">
+                ${m.marketShareMedio.toFixed(1)}%
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded bg-slate-50 border border-slate-100">
+              <span class="text-[10px] text-slate-400 uppercase font-medium">Rating Aurora</span>
+              <div class="font-bold text-sm mt-0.5 text-blue-700">
+                ${m.ratingCredito} <span class="text-[10px] text-slate-400 font-mono">(${m.scoreCredito} pts)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico Rodada a Rodada -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Evolução Histórica</h4>
+          ${historicoHtml}
+        </div>
+
+        <!-- Diretoria e Governança -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Diretoria Executiva</h4>
+          ${membrosHtml}
+        </div>
+
+      </div>
+    `;
+
+    if (typeof window.abrirSideSheet === 'function') {
+      window.abrirSideSheet(`Raio-X • ${eq.nome}`, contentHtml);
+    } else {
+      alert(`Empresa: ${eq.nome}\nPosição: #${emp.posicao}\nScore: ${sc.geral} pts\nLucro: R$ ${m.lucroAcumulado}`);
+    }
+  } catch (err) {
+    console.error('Erro ao abrir raio-x:', err);
+  }
+}
+</script>

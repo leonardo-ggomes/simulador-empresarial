@@ -1,0 +1,955 @@
+<div class="space-y-6 pb-20" data-sala-id="<%= currentRoom.id %>" data-equipe-id="<%= currentTeam.id %>" data-rodada="<%= currentRoom.rodada_atual %>" data-sala-codigo="<%= currentRoom.codigo %>">
+
+  <!-- Header Executivo Slim da Rodada -->
+  <div class="app-card p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="space-y-1">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="badge-status badge-status-neutral font-mono text-[11px]">
+          Rodada <%= currentRoom.rodada_atual %> de <%= currentRoom.max_rodadas || 12 %>
+        </span>
+        <span class="badge-status badge-status-neutral font-semibold text-[11px]">
+          <%= currentTeam.nome %>
+        </span>
+        <% if (decisionStatus === 'enviada') { %>
+          <span class="badge-status badge-status-success font-semibold text-[11px]">
+            ● Decisão Homologada pelo CEO
+          </span>
+        <% } else { %>
+          <span class="badge-status badge-status-warning font-semibold text-[11px]">
+            ○ Em Formulação (Rascunho)
+          </span>
+        <% } %>
+        <span id="sync-indicator" class="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Tempo Real
+        </span>
+      </div>
+      <h1 class="text-lg font-bold text-slate-900 tracking-tight">
+        Painel de Deliberação Executiva
+      </h1>
+      <p class="text-xs text-slate-500 max-w-2xl">
+        Configure as decisões estratégicas por diretoria. Acompanhe a telemetria operacional em tempo real antes da homologação final.
+      </p>
+    </div>
+
+    <!-- Ações Auxiliares Rápidas (Side Sheets) -->
+    <div class="flex items-center gap-2 self-stretch md:self-auto">
+      <button type="button" onclick="abrirPreviaImpacto()" class="btn-secondary text-xs flex items-center gap-1.5 flex-1 md:flex-initial">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        <span>Simulação de Desembolso</span>
+      </button>
+      <button type="button" onclick="abrirGuiaDiretorias()" class="btn-secondary text-xs flex items-center gap-1.5" title="Regras de mercado e benchmarks">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span class="hidden sm:inline">Benchmarks</span>
+      </button>
+      <a href="/sala/<%= currentRoom.id %>/powerbi" class="btn-secondary text-xs text-blue-600 border-blue-200 hover:bg-blue-50/50 flex items-center gap-1" title="Consultar dados no Power BI">
+        <span>Power BI</span>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Trilho Executivo Slim (Segmented Navigation Rail) -->
+  <div class="decision-rail" role="tablist" aria-label="Diretorias Executivas">
+    
+    <!-- Tab 1: CMO -->
+    <button type="button" role="tab" id="tab-btn-cmo" aria-selected="true" aria-controls="panel-cmo" onclick="trocarDiretoria('cmo')" class="decision-rail-btn active group">
+      <div class="flex items-center justify-between w-full">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-800">CMO</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Parâmetros configurados"></span>
+      </div>
+      <div class="text-xs font-semibold text-slate-900 truncate">Comercial & Vendas</div>
+      <span class="rail-telemetry-badge" id="rail-telemetry-cmo">R$ 80,00 • R$ 2.500</span>
+    </button>
+
+    <!-- Tab 2: COO -->
+    <button type="button" role="tab" id="tab-btn-coo" aria-selected="false" aria-controls="panel-coo" onclick="trocarDiretoria('coo')" class="decision-rail-btn group">
+      <div class="flex items-center justify-between w-full">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-800">COO</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Parâmetros configurados"></span>
+      </div>
+      <div class="text-xs font-semibold text-slate-900 truncate">Operações & Estoque</div>
+      <span class="rail-telemetry-badge" id="rail-telemetry-coo">1.000 un • 0 urg</span>
+    </button>
+
+    <!-- Tab 3: CFO -->
+    <button type="button" role="tab" id="tab-btn-cfo" aria-selected="false" aria-controls="panel-cfo" onclick="trocarDiretoria('cfo')" class="decision-rail-btn group">
+      <div class="flex items-center justify-between w-full">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-800">CFO</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Parâmetros configurados"></span>
+      </div>
+      <div class="text-xs font-semibold text-slate-900 truncate">Finanças & Crédito</div>
+      <span class="rail-telemetry-badge" id="rail-telemetry-cfo">R$ 0 • R$ 0</span>
+    </button>
+
+    <!-- Tab 4: Visão Consolidada -->
+    <button type="button" role="tab" id="tab-btn-panorama" aria-selected="false" aria-controls="panel-panorama" onclick="trocarDiretoria('panorama')" class="decision-rail-btn group border-l border-slate-200">
+      <div class="flex items-center justify-between w-full">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-800">VISÃO GERAL</span>
+        <svg class="w-3 h-3 text-slate-400 group-hover:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+      </div>
+      <div class="text-xs font-semibold text-slate-900 truncate">Panorama Geral</div>
+      <span class="rail-telemetry-badge">Todas as Diretorias</span>
+    </button>
+
+  </div>
+
+  <!-- Formulário Central de Submissão -->
+  <form id="form-decisoes" onsubmit="handleSalvarDecisao(event, 'enviada')" class="space-y-6">
+
+    <!-- ====================================================================
+         PAINEL 1: DIRETORIA COMERCIAL (CMO)
+         ==================================================================== -->
+    <div id="panel-cmo" role="tabpanel" class="app-card p-6 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+        <div class="space-y-0.5">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded">CMO</span>
+            <h2 class="text-sm font-bold text-slate-900 tracking-tight">Diretoria Comercial & Mercado</h2>
+          </div>
+          <p class="text-xs text-slate-500">Defina a precificação unitária do produto e a verba de tração comercial para o trimestre.</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-400 font-mono">
+          <span>Ref. Mercado: <strong class="text-slate-700">R$ 80,00</strong></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Bloco 1.1: Preço Unitário -->
+        <div class="space-y-3.5 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-800" for="dec-preco">
+              Preço Unitário de Venda
+            </label>
+            <div class="text-[11px] font-mono text-slate-500" id="cmo-preco-display">
+              R$ <%= Number(currentDecision.payload?.preco || 80).toFixed(2).replace('.', ',') %>
+            </div>
+          </div>
+
+          <div class="input-addon-group">
+            <span class="input-addon-affix">R$</span>
+            <input type="number" step="0.50" min="20" max="300" id="dec-preco" required value="<%= currentDecision.payload?.preco || 80.00 %>" oninput="sincronizarInput('preco', this.value)">
+          </div>
+
+          <!-- Slider Slim -->
+          <div class="space-y-1">
+            <input type="range" class="slider-slim" min="20" max="300" step="0.50" id="range-preco" value="<%= currentDecision.payload?.preco || 80.00 %>" oninput="sincronizarSlider('preco', this.value)">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400">
+              <span>Mín R$ 20</span>
+              <span>Benchmark R$ 80</span>
+              <span>Máx R$ 300</span>
+            </div>
+          </div>
+
+          <!-- Presets Rápidos -->
+          <div class="flex items-center gap-1.5 flex-wrap pt-1">
+            <span class="text-[10px] text-slate-400 font-medium">Presets:</span>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('preco', 65.00)">R$ 65,00 (Competitivo)</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('preco', 80.00)">R$ 80,00 (Neutro)</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('preco', 95.00)">R$ 95,00 (Premium)</button>
+          </div>
+        </div>
+
+        <!-- Bloco 1.2: Verba de Marketing -->
+        <div class="space-y-3.5 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-800" for="dec-marketing">
+              Investimento em Marketing
+            </label>
+            <div class="text-[11px] font-mono text-slate-500" id="cmo-mkt-display">
+              R$ <%= Number(currentDecision.payload?.marketing || 2500).toLocaleString('pt-BR') %>
+            </div>
+          </div>
+
+          <div class="input-addon-group">
+            <span class="input-addon-affix">R$</span>
+            <input type="number" step="100" min="0" max="50000" id="dec-marketing" required value="<%= currentDecision.payload?.marketing || 2500 %>" oninput="sincronizarInput('marketing', this.value)">
+          </div>
+
+          <!-- Slider Slim -->
+          <div class="space-y-1">
+            <input type="range" class="slider-slim" min="0" max="50000" step="100" id="range-marketing" value="<%= currentDecision.payload?.marketing || 2500 %>" oninput="sincronizarSlider('marketing', this.value)">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400">
+              <span>R$ 0</span>
+              <span>Padrão R$ 2.500</span>
+              <span>Máx R$ 50.000</span>
+            </div>
+          </div>
+
+          <!-- Presets Rápidos -->
+          <div class="flex items-center gap-1.5 flex-wrap pt-1">
+            <span class="text-[10px] text-slate-400 font-medium">Presets:</span>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('marketing', 1000)">R$ 1.000 (Mínimo)</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('marketing', 2500)">R$ 2.500 (Médio)</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('marketing', 5000)">R$ 5.000 (Agressivo)</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Micro-Telemetria Comercial Slim -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Margem Bruta Unitária Estimada</span>
+          <span class="text-sm font-bold text-slate-900 font-mono" id="kpi-margem-unitaria">R$ 45,00 / un</span>
+          <span class="text-[10px] text-slate-500">Baseada no CMV médio de R$ 35,00</span>
+        </div>
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Desembolso de Atração</span>
+          <span class="text-sm font-bold text-slate-900 font-mono" id="kpi-desembolso-mkt">R$ 2.500,00</span>
+          <span class="text-[10px] text-slate-500">Sujeito a curva de rendimentos decrescentes</span>
+        </div>
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Posicionamento Relativo</span>
+          <span class="text-sm font-bold text-slate-900 font-mono" id="kpi-posicionamento-preco">0% vs Mercado</span>
+          <span class="text-[10px] text-slate-500">Elasticidade-preço estimada em ~ -1.25</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         PAINEL 2: DIRETORIA DE OPERAÇÕES & ESTOQUE (COO)
+         ==================================================================== -->
+    <div id="panel-coo" role="tabpanel" class="app-card p-6 space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+        <div class="space-y-0.5">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded">COO</span>
+            <h2 class="text-sm font-bold text-slate-900 tracking-tight">Operações, Suprimentos & Cadeia Produtiva</h2>
+          </div>
+          <p class="text-xs text-slate-500">Planeje a aquisição de lotes normais com lead-time regular e compras emergenciais para proteção imediata.</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-400 font-mono">
+          <span>CMV Unitário Base: <strong class="text-slate-700">R$ 35,00</strong></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Bloco 2.1: Compra Normal -->
+        <div class="space-y-3.5 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-800" for="dec-compra-normal">
+              Compra Programada de Lotes
+            </label>
+            <div class="text-[11px] font-mono text-slate-500" id="coo-normal-display">
+              <%= Number(currentDecision.payload?.compraEstoqueNormal || 1000).toLocaleString('pt-BR') %> unidades
+            </div>
+          </div>
+
+          <div class="input-addon-group">
+            <input type="number" step="50" min="0" max="5000" id="dec-compra-normal" required value="<%= currentDecision.payload?.compraEstoqueNormal || 1000 %>" oninput="sincronizarInput('compra-normal', this.value)">
+            <span class="input-addon-affix border-r-0 border-l border-slate-200">unidades</span>
+          </div>
+
+          <!-- Slider Slim -->
+          <div class="space-y-1">
+            <input type="range" class="slider-slim" min="0" max="5000" step="50" id="range-compra-normal" value="<%= currentDecision.payload?.compraEstoqueNormal || 1000 %>" oninput="sincronizarSlider('compra-normal', this.value)">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400">
+              <span>0 un</span>
+              <span>1.000 un (Padrão)</span>
+              <span>5.000 un</span>
+            </div>
+          </div>
+
+          <!-- Presets Rápidos -->
+          <div class="flex items-center gap-1.5 flex-wrap pt-1">
+            <span class="text-[10px] text-slate-400 font-medium">Presets:</span>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('compra-normal', 500)">500 un</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('compra-normal', 1000)">1.000 un</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('compra-normal', 1500)">1.500 un</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('compra-normal', 2500)">2.500 un</button>
+          </div>
+          <p class="text-[11px] text-slate-400">Entrega garantida para a próxima rodada (lead-time industrial padrão).</p>
+        </div>
+
+        <!-- Bloco 2.2: Compra Emergencial -->
+        <div class="space-y-3.5 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-800" for="dec-compra-urgente">
+              Compra Emergencial (Pronta Entrega)
+            </label>
+            <div class="text-[11px] font-mono text-slate-500" id="coo-urgente-display">
+              <%= Number(currentDecision.payload?.compraEstoqueUrgente || 0).toLocaleString('pt-BR') %> unidades
+            </div>
+          </div>
+
+          <div class="input-addon-group">
+            <input type="number" step="50" min="0" max="2000" id="dec-compra-urgente" value="<%= currentDecision.payload?.compraEstoqueUrgente || 0 %>" oninput="sincronizarInput('compra-urgente', this.value)">
+            <span class="input-addon-affix border-r-0 border-l border-slate-200">unidades</span>
+          </div>
+
+          <!-- Slider Slim -->
+          <div class="space-y-1">
+            <input type="range" class="slider-slim" min="0" max="2000" step="50" id="range-compra-urgente" value="<%= currentDecision.payload?.compraEstoqueUrgente || 0 %>" oninput="sincronizarSlider('compra-urgente', this.value)">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400">
+              <span>0 un (Recomendado)</span>
+              <span>1.000 un</span>
+              <span>2.000 un</span>
+            </div>
+          </div>
+
+          <!-- Presets Rápidos -->
+          <div class="flex items-center gap-1.5 flex-wrap pt-1">
+            <span class="text-[10px] text-slate-400 font-medium">Presets:</span>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('compra-urgente', 0)">0 un (Sem ágio)</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('compra-urgente', 200)">200 un</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('compra-urgente', 500)">500 un</button>
+          </div>
+          <p class="text-[11px] text-slate-400">Disponibilidade imediata com acréscimo de +30% (R$ 45,50/unidade).</p>
+        </div>
+
+      </div>
+
+      <!-- Micro-Telemetria Operacional Slim -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total de Insumos Encomendados</span>
+          <span class="text-sm font-bold text-slate-900 font-mono" id="kpi-total-unidades-compras">1.000 unidades</span>
+          <span class="text-[10px] text-slate-500">Volume físico programado</span>
+        </div>
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Desembolso Total com Suprimentos</span>
+          <span class="text-sm font-bold text-slate-900 font-mono text-rose-600" id="kpi-custo-total-compras">R$ 35.000,00</span>
+          <span class="text-[10px] text-slate-500" id="kpi-agio-emergencial">Ágio emergencial: R$ 0,00</span>
+        </div>
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Custo Médio Unitário Ponderado</span>
+          <span class="text-sm font-bold text-slate-900 font-mono" id="kpi-cmv-ponderado">R$ 35,00 / un</span>
+          <span class="text-[10px] text-slate-500">Impactará o CPV dos próximos períodos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         PAINEL 3: DIRETORIA FINANCEIRA (CFO)
+         ==================================================================== -->
+    <div id="panel-cfo" role="tabpanel" class="app-card p-6 space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+        <div class="space-y-0.5">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">CFO</span>
+            <h2 class="text-sm font-bold text-slate-900 tracking-tight">Finanças, Tesouraria & Estrutura de Capital</h2>
+          </div>
+          <p class="text-xs text-slate-500">Gerencie a liquidez de curto prazo através de empréstimos com o Banco Aurora ou amortize dívidas onerosas.</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-400 font-mono">
+          <span>Banco Aurora: <strong class="text-emerald-700">Linha Aberta</strong></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Bloco 3.1: Captação de Empréstimo -->
+        <div class="space-y-3.5 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-800" for="dec-solicitar-emprestimo">
+              Captação de Capital de Giro (Novo Empréstimo)
+            </label>
+            <div class="text-[11px] font-mono text-emerald-600 font-semibold" id="cfo-emprestimo-display">
+              + R$ <%= Number(currentDecision.payload?.solicitarEmprestimo || 0).toLocaleString('pt-BR') %>
+            </div>
+          </div>
+
+          <div class="input-addon-group">
+            <span class="input-addon-affix">R$</span>
+            <input type="number" step="1000" min="0" max="100000" id="dec-solicitar-emprestimo" value="<%= currentDecision.payload?.solicitarEmprestimo || 0 %>" oninput="sincronizarInput('solicitar-emprestimo', this.value)">
+          </div>
+
+          <!-- Slider Slim -->
+          <div class="space-y-1">
+            <input type="range" class="slider-slim" min="0" max="100000" step="1000" id="range-solicitar-emprestimo" value="<%= currentDecision.payload?.solicitarEmprestimo || 0 %>" oninput="sincronizarSlider('solicitar-emprestimo', this.value)">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400">
+              <span>R$ 0</span>
+              <span>R$ 50.000</span>
+              <span>R$ 100.000</span>
+            </div>
+          </div>
+
+          <!-- Presets Rápidos -->
+          <div class="flex items-center gap-1.5 flex-wrap pt-1">
+            <span class="text-[10px] text-slate-400 font-medium">Presets:</span>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('solicitar-emprestimo', 0)">R$ 0</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('solicitar-emprestimo', 10000)">R$ 10.000</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('solicitar-emprestimo', 25000)">R$ 25.000</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('solicitar-emprestimo', 50000)">R$ 50.000</button>
+          </div>
+          <p class="text-[11px] text-slate-400">Juros trimestrais calculados automaticamente conforme o Rating Aurora da empresa.</p>
+        </div>
+
+        <!-- Bloco 3.2: Amortização Voluntária -->
+        <div class="space-y-3.5 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-800" for="dec-amortizar-emprestimo">
+              Amortização Voluntária de Dívida
+            </label>
+            <div class="text-[11px] font-mono text-slate-600 font-semibold" id="cfo-amortizacao-display">
+              - R$ <%= Number(currentDecision.payload?.amortizarEmprestimo || 0).toLocaleString('pt-BR') %>
+            </div>
+          </div>
+
+          <div class="input-addon-group">
+            <span class="input-addon-affix">R$</span>
+            <input type="number" step="500" min="0" max="100000" id="dec-amortizar-emprestimo" value="<%= currentDecision.payload?.amortizarEmprestimo || 0 %>" oninput="sincronizarInput('amortizar-emprestimo', this.value)">
+          </div>
+
+          <!-- Slider Slim -->
+          <div class="space-y-1">
+            <input type="range" class="slider-slim" min="0" max="100000" step="500" id="range-amortizar-emprestimo" value="<%= currentDecision.payload?.amortizarEmprestimo || 0 %>" oninput="sincronizarSlider('amortizar-emprestimo', this.value)">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400">
+              <span>R$ 0</span>
+              <span>R$ 20.000</span>
+              <span>R$ 100.000</span>
+            </div>
+          </div>
+
+          <!-- Presets Rápidos -->
+          <div class="flex items-center gap-1.5 flex-wrap pt-1">
+            <span class="text-[10px] text-slate-400 font-medium">Presets:</span>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('amortizar-emprestimo', 0)">R$ 0</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('amortizar-emprestimo', 5000)">R$ 5.000</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('amortizar-emprestimo', 15000)">R$ 15.000</button>
+            <button type="button" class="preset-chip" onclick="aplicarPreset('amortizar-emprestimo', 30000)">R$ 30.000</button>
+          </div>
+          <p class="text-[11px] text-slate-400">Reduz o saldo devedor principal para economizar em despesas financeiras futuras.</p>
+        </div>
+
+      </div>
+
+      <!-- Micro-Telemetria Financeira Slim -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Ingresso Bruto de Tesouraria</span>
+          <span class="text-sm font-bold text-emerald-600 font-mono" id="kpi-ingressos-tesouraria">+ R$ 0,00</span>
+          <span class="text-[10px] text-slate-500">Recurso novo adicionado ao caixa disponível</span>
+        </div>
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Desembolso de Amortização</span>
+          <span class="text-sm font-bold text-slate-700 font-mono" id="kpi-desembolso-amortizacao">R$ 0,00</span>
+          <span class="text-[10px] text-slate-500">Saída imediata de caixa para redução de passivo</span>
+        </div>
+        <div class="micro-kpi-card">
+          <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Variação Líquida de Endividamento</span>
+          <span class="text-sm font-bold text-slate-900 font-mono" id="kpi-variacao-liquida-divida">R$ 0,00</span>
+          <span class="text-[10px] text-slate-500">Impacto total sobre o passivo circulante</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         PAINEL 4: PANORAMA CONSOLIDADO (TODAS AS DIRETORIAS)
+         ==================================================================== -->
+    <div id="panel-panorama" role="tabpanel" class="app-card p-6 space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+        <div class="space-y-0.5">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded">PANORAMA</span>
+            <h2 class="text-sm font-bold text-slate-900 tracking-tight">Síntese Integrada da Tomada de Decisão</h2>
+          </div>
+          <p class="text-xs text-slate-500">Conferência executiva 360° de todos os parâmetros alinhados pela equipe antes da homologação final.</p>
+        </div>
+        <button type="button" onclick="abrirPreviaImpacto()" class="btn-secondary text-xs flex items-center gap-1">
+          <span>Abrir Detalhamento Contábil</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- Cartão CMO Resumo -->
+        <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-900">CMO • Comercial</span>
+            <button type="button" onclick="trocarDiretoria('cmo')" class="text-[11px] text-blue-600 hover:underline">Editar</button>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Preço de Venda:</span>
+              <span class="font-mono font-bold text-slate-900" id="resumo-preco">R$ 80,00</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Investimento Mkt:</span>
+              <span class="font-mono font-bold text-slate-900" id="resumo-mkt">R$ 2.500,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cartão COO Resumo -->
+        <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-900">COO • Operações</span>
+            <button type="button" onclick="trocarDiretoria('coo')" class="text-[11px] text-blue-600 hover:underline">Editar</button>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Compra Normal:</span>
+              <span class="font-mono font-bold text-slate-900" id="resumo-compra-normal">1.000 un</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Compra Urgente:</span>
+              <span class="font-mono font-bold text-slate-900" id="resumo-compra-urgente">0 un</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cartão CFO Resumo -->
+        <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-900">CFO • Finanças</span>
+            <button type="button" onclick="trocarDiretoria('cfo')" class="text-[11px] text-blue-600 hover:underline">Editar</button>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Novo Empréstimo:</span>
+              <span class="font-mono font-bold text-emerald-600" id="resumo-emprestimo">R$ 0,00</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Amortização Dívida:</span>
+              <span class="font-mono font-bold text-slate-900" id="resumo-amortizacao">R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         BARRA DE COMANDO FLUTUANTE / DOCK SLIM DE GOVERNANÇA
+         ==================================================================== -->
+    <div class="decision-dock flex flex-col md:flex-row items-center justify-between gap-3 select-none">
+      
+      <!-- Telemetria Rápida no Rodapé -->
+      <div class="flex flex-wrap items-center gap-4 text-xs w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-500">Desembolso Previsto:</span>
+          <span class="font-mono font-bold text-rose-600" id="dock-desembolso-total">R$ 37.500,00</span>
+        </div>
+        <div class="text-slate-300 hidden sm:inline">•</div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-500">Captação Aurora:</span>
+          <span class="font-mono font-bold text-emerald-600" id="dock-captacao-total">+ R$ 0,00</span>
+        </div>
+        <div class="text-slate-300 hidden sm:inline">•</div>
+        <button type="button" onclick="abrirPreviaImpacto()" class="text-[11px] font-medium text-slate-600 hover:text-slate-900 underline">
+          Ver DRE Preliminar
+        </button>
+      </div>
+
+      <!-- Navegação Entre Diretorias & Submissão -->
+      <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+        <button type="button" id="btn-diretoria-ant" onclick="navegarDiretoria(-1)" class="btn-secondary text-xs px-2.5 py-1.5" title="Diretoria anterior">
+          ←
+        </button>
+        <button type="button" id="btn-diretoria-prox" onclick="navegarDiretoria(1)" class="btn-secondary text-xs px-2.5 py-1.5" title="Próxima diretoria">
+          →
+        </button>
+
+        <div class="h-4 w-px bg-slate-200 mx-1"></div>
+
+        <button type="button" onclick="handleSalvarDecisao(event, 'rascunho')" class="btn-secondary text-xs font-medium" title="Atalho: Ctrl+S">
+          Salvar Rascunho
+        </button>
+
+        <% const ehCEO = currentTeam.membros.some(m => m.usuario_id === currentUser.id && m.papel === 'CEO'); %>
+        <% if (ehCEO) { %>
+          <button type="submit" class="btn-primary text-xs font-semibold px-4">
+            Homologar Decisão (CEO)
+          </button>
+        <% } else { %>
+          <div class="text-[11px] text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-md" title="Apenas o CEO pode homologar a decisão final">
+            Aguardando CEO (<%= currentTeam.membros.find(m => m.papel === 'CEO')?.nome || 'CEO' %>)
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+// Lista sequencial das diretorias executivas (sem CDO)
+const DIRETORES = ['cmo', 'coo', 'cfo', 'panorama'];
+let diretoriaAtiva = 'cmo';
+
+// Alternar entre abas com transição suave GSAP
+function trocarDiretoria(nome) {
+  if (!DIRETORES.includes(nome)) return;
+  diretoriaAtiva = nome;
+
+  // Atualiza estado visual dos botões do trilho
+  DIRETORES.forEach(d => {
+    const btn = document.getElementById(`tab-btn-${d}`);
+    const panel = document.getElementById(`panel-${d}`);
+    if (btn) {
+      if (d === nome) {
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+      } else {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+      }
+    }
+    if (panel) {
+      if (d === nome) {
+        panel.classList.remove('hidden');
+        if (typeof gsap !== 'undefined') {
+          gsap.fromTo(panel, 
+            { opacity: 0, y: 6 }, 
+            { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out' }
+          );
+        }
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+  });
+
+  atualizarCalculos();
+}
+
+function navegarDiretoria(delta) {
+  const currentIndex = DIRETORES.indexOf(diretoriaAtiva);
+  let nextIndex = currentIndex + delta;
+  if (nextIndex < 0) nextIndex = DIRETORES.length - 1;
+  if (nextIndex >= DIRETORES.length) nextIndex = 0;
+  trocarDiretoria(DIRETORES[nextIndex]);
+}
+
+// Sincronização em duas vias: Input numérico -> Slider
+function sincronizarInput(campo, valor) {
+  const range = document.getElementById(`range-${campo}`);
+  if (range) range.value = valor;
+  atualizarCalculos();
+}
+
+// Sincronização em duas vias: Slider -> Input numérico
+function sincronizarSlider(campo, valor) {
+  const input = document.getElementById(`dec-${campo}`);
+  if (input) input.value = valor;
+  atualizarCalculos();
+}
+
+// Aplicação de chips de preset em 1 clique
+function aplicarPreset(campo, valor) {
+  const input = document.getElementById(`dec-${campo}`);
+  const range = document.getElementById(`range-${campo}`);
+  if (input) input.value = valor;
+  if (range) range.value = valor;
+  atualizarCalculos();
+  if (typeof gsap !== 'undefined' && input) {
+    gsap.fromTo(input, { scale: 1.04 }, { scale: 1, duration: 0.15 });
+  }
+}
+
+// Motor de Cálculo em Tempo Real & Atualização de Telemetrias
+function atualizarCalculos() {
+  const preco = parseFloat(document.getElementById('dec-preco')?.value) || 0;
+  const mkt = parseFloat(document.getElementById('dec-marketing')?.value) || 0;
+  const cNormal = parseInt(document.getElementById('dec-compra-normal')?.value, 10) || 0;
+  const cUrgente = parseInt(document.getElementById('dec-compra-urgente')?.value, 10) || 0;
+  const emprestimo = parseFloat(document.getElementById('dec-solicitar-emprestimo')?.value) || 0;
+  const amortizacao = parseFloat(document.getElementById('dec-amortizar-emprestimo')?.value) || 0;
+
+  const custoUnitMedio = 35.00;
+  const custoUrgenteUnit = custoUnitMedio * 1.30;
+  const desembolsoComprasNormal = cNormal * custoUnitMedio;
+  const desembolsoComprasUrgente = cUrgente * custoUrgenteUnit;
+  const desembolsoComprasTotal = desembolsoComprasNormal + desembolsoComprasUrgente;
+  const totalDesembolsos = mkt + desembolsoComprasTotal + amortizacao;
+  const totalIngressos = emprestimo;
+
+  // 1. Telemetrias no Trilho de Abas
+  const railCMO = document.getElementById('rail-telemetry-cmo');
+  if (railCMO) railCMO.textContent = `R$ ${preco.toFixed(2).replace('.', ',')} • R$ ${Math.round(mkt).toLocaleString('pt-BR')}`;
+
+  const railCOO = document.getElementById('rail-telemetry-coo');
+  if (railCOO) railCOO.textContent = `${cNormal.toLocaleString('pt-BR')} un • ${cUrgente.toLocaleString('pt-BR')} urg`;
+
+  const railCFO = document.getElementById('rail-telemetry-cfo');
+  if (railCFO) railCFO.textContent = `+R$ ${Math.round(emprestimo).toLocaleString('pt-BR')} • -R$ ${Math.round(amortizacao).toLocaleString('pt-BR')}`;
+
+  // 2. Micro-KPIs CMO
+  const elMargem = document.getElementById('kpi-margem-unitaria');
+  if (elMargem) {
+    const margem = preco - custoUnitMedio;
+    elMargem.textContent = `R$ ${margem.toFixed(2).replace('.', ',')} / un`;
+    elMargem.className = margem > 0 ? 'text-sm font-bold text-slate-900 font-mono' : 'text-sm font-bold text-rose-600 font-mono';
+  }
+  const elDesembolsoMkt = document.getElementById('kpi-desembolso-mkt');
+  if (elDesembolsoMkt) elDesembolsoMkt.textContent = `R$ ${mkt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const elPos = document.getElementById('kpi-posicionamento-preco');
+  if (elPos) {
+    const deltaPerc = ((preco - 80.00) / 80.00) * 100;
+    elPos.textContent = `${deltaPerc >= 0 ? '+' : ''}${deltaPerc.toFixed(1)}% vs Mercado`;
+  }
+
+  // 3. Micro-KPIs COO
+  const elTotalUn = document.getElementById('kpi-total-unidades-compras');
+  if (elTotalUn) elTotalUn.textContent = `${(cNormal + cUrgente).toLocaleString('pt-BR')} unidades`;
+
+  const elCustoCompras = document.getElementById('kpi-custo-total-compras');
+  if (elCustoCompras) elCustoCompras.textContent = `R$ ${desembolsoComprasTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const elAgio = document.getElementById('kpi-agio-emergencial');
+  if (elAgio) {
+    const agio = cUrgente * (custoUrgenteUnit - custoUnitMedio);
+    elAgio.textContent = `Ágio emergencial: R$ ${agio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  }
+
+  const elCmvPond = document.getElementById('kpi-cmv-ponderado');
+  if (elCmvPond) {
+    const totalUn = cNormal + cUrgente;
+    const ponderado = totalUn > 0 ? (desembolsoComprasTotal / totalUn) : custoUnitMedio;
+    elCmvPond.textContent = `R$ ${ponderado.toFixed(2).replace('.', ',')} / un`;
+  }
+
+  // 4. Micro-KPIs CFO
+  const elIngresso = document.getElementById('kpi-ingressos-tesouraria');
+  if (elIngresso) elIngresso.textContent = `+ R$ ${emprestimo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const elAmort = document.getElementById('kpi-desembolso-amortizacao');
+  if (elAmort) elAmort.textContent = `R$ ${amortizacao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const elVarDiv = document.getElementById('kpi-variacao-liquida-divida');
+  if (elVarDiv) {
+    const varLiq = emprestimo - amortizacao;
+    elVarDiv.textContent = `${varLiq >= 0 ? '+' : ''} R$ ${varLiq.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    elVarDiv.className = varLiq <= 0 ? 'text-sm font-bold text-emerald-600 font-mono' : 'text-sm font-bold text-slate-900 font-mono';
+  }
+
+  // 5. Dock Inferior
+  const dockDesembolso = document.getElementById('dock-desembolso-total');
+  if (dockDesembolso) dockDesembolso.textContent = `R$ ${totalDesembolsos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const dockCaptacao = document.getElementById('dock-captacao-total');
+  if (dockCaptacao) dockCaptacao.textContent = `+ R$ ${totalIngressos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  // 6. Resumo Consolidado (Painel Panorama)
+  const resPreco = document.getElementById('resumo-preco');
+  if (resPreco) resPreco.textContent = `R$ ${preco.toFixed(2).replace('.', ',')}`;
+
+  const resMkt = document.getElementById('resumo-mkt');
+  if (resMkt) resMkt.textContent = `R$ ${mkt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const resCNormal = document.getElementById('resumo-compra-normal');
+  if (resCNormal) resCNormal.textContent = `${cNormal.toLocaleString('pt-BR')} un`;
+
+  const resCUrgente = document.getElementById('resumo-compra-urgente');
+  if (resCUrgente) resCUrgente.textContent = `${cUrgente.toLocaleString('pt-BR')} un`;
+
+  const resEmp = document.getElementById('resumo-emprestimo');
+  if (resEmp) resEmp.textContent = `+ R$ ${emprestimo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const resAmort = document.getElementById('resumo-amortizacao');
+  if (resAmort) resAmort.textContent = `- R$ ${amortizacao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+}
+
+// Side Sheet 1: Previsão de Desembolso & Fluxo Contábil
+function abrirPreviaImpacto() {
+  const preco = parseFloat(document.getElementById('dec-preco').value) || 0;
+  const mkt = parseFloat(document.getElementById('dec-marketing').value) || 0;
+  const cNormal = parseInt(document.getElementById('dec-compra-normal').value, 10) || 0;
+  const cUrgente = parseInt(document.getElementById('dec-compra-urgente').value, 10) || 0;
+  const emprestimo = parseFloat(document.getElementById('dec-solicitar-emprestimo').value) || 0;
+  const amortizacao = parseFloat(document.getElementById('dec-amortizar-emprestimo').value) || 0;
+
+  const custoUnitMedio = 35.00;
+  const comprasNormais = cNormal * custoUnitMedio;
+  const comprasUrgentes = cUrgente * custoUnitMedio * 1.30;
+  const desembolsoCompras = comprasNormais + comprasUrgentes;
+  const totalDesembolsos = mkt + desembolsoCompras + amortizacao;
+  const totalIngressos = emprestimo;
+  const saldoOperacionalPrevisto = totalIngressos - totalDesembolsos;
+
+  const html = `
+    <div class="space-y-5 text-xs">
+      <div>
+        <h3 class="font-bold text-slate-900 text-sm tracking-tight">Simulação de Fluxo de Caixa Preliminar</h3>
+        <p class="text-slate-500 mt-0.5">Visão consolidada das saídas imediatas e captações contratadas para a Rodada <%= currentRoom.rodada_atual %>:</p>
+      </div>
+
+      <!-- Tabela Contábil Editorial -->
+      <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+        <div class="px-3.5 py-2 bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          Desembolsos Operacionais Previstos
+        </div>
+        <div class="p-3.5 space-y-2 text-xs">
+          <div class="flex justify-between items-baseline">
+            <span class="text-slate-600">Investimento em Marketing (CMO):</span>
+            <span class="font-mono text-slate-900">R$ ${mkt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="flex justify-between items-baseline">
+            <span class="text-slate-600">Estoque Programado (${cNormal.toLocaleString('pt-BR')} un @ R$ 35,00):</span>
+            <span class="font-mono text-slate-900">R$ ${comprasNormais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="flex justify-between items-baseline">
+            <span class="text-slate-600">Estoque Emergencial (${cUrgente.toLocaleString('pt-BR')} un @ R$ 45,50):</span>
+            <span class="font-mono text-slate-900">R$ ${comprasUrgentes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="flex justify-between items-baseline">
+            <span class="text-slate-600">Amortização de Empréstimos (CFO):</span>
+            <span class="font-mono text-slate-900">R$ ${amortizacao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="pt-2.5 border-t border-slate-200 flex justify-between items-baseline font-bold text-slate-900">
+            <span>Total de Saídas Operacionais:</span>
+            <span class="font-mono text-rose-600">R$ ${totalDesembolsos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ingressos de Tesouraria -->
+      <div class="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-lg flex justify-between items-center text-xs">
+        <div>
+          <div class="font-bold text-emerald-950">Captação de Empréstimo Solicitada</div>
+          <div class="text-[11px] text-emerald-700">Entrada imediata de liquidez em conta corrente</div>
+        </div>
+        <span class="font-mono text-emerald-700 font-bold text-sm">+ R$ ${totalIngressos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+      </div>
+
+      <!-- Saldo Preliminar -->
+      <div class="p-3.5 bg-slate-900 text-white rounded-lg flex justify-between items-center text-xs">
+        <div>
+          <div class="font-medium text-slate-300">Necessidade Líquida Estimada</div>
+          <div class="text-[10px] text-slate-400">Ingressos menos saídas previstas</div>
+        </div>
+        <span class="font-mono font-bold text-sm ${saldoOperacionalPrevisto >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+          ${saldoOperacionalPrevisto >= 0 ? '+' : ''} R$ ${saldoOperacionalPrevisto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+        </span>
+      </div>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-500 space-y-1">
+        <div class="font-bold text-slate-700">Nota Contábil de Fechamento:</div>
+        <p>
+          O faturamento bruto de vendas, impostos incidentes (ICMS/PIS/COFINS), custos fixos e apuração do Lucro Líquido serão processados pelo motor contábil da simulação após o encerramento da rodada pelo professor.
+        </p>
+      </div>
+    </div>
+  `;
+  abrirSideSheet('Estimativa de Desembolso', html);
+}
+
+// Side Sheet 2: Benchmarks & Parâmetros do Mercado
+function abrirGuiaDiretorias() {
+  const html = `
+    <div class="space-y-4 text-xs">
+      <div>
+        <h3 class="font-bold text-slate-900 text-sm tracking-tight">Parâmetros & Benchmarks da Simulação</h3>
+        <p class="text-slate-500 mt-0.5">Referenciais para Porto Aurora 2031 (Rodada <%= currentRoom.rodada_atual %>):</p>
+      </div>
+
+      <div class="space-y-3">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+          <div class="font-bold text-slate-900 flex items-center justify-between">
+            <span>CMO • Precificação & Marketing</span>
+            <span class="text-blue-600 font-mono text-[11px]">R$ 80,00</span>
+          </div>
+          <p class="text-slate-600 text-[11px]">
+            O preço médio de mercado é de R$ 80,00. Desvios expressivos sem investimento proporcional em marketing podem comprometer severamente o market share da empresa.
+          </p>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+          <div class="font-bold text-slate-900 flex items-center justify-between">
+            <span>COO • Cadeia de Suprimentos</span>
+            <span class="text-amber-600 font-mono text-[11px]">R$ 35,00 vs R$ 45,50</span>
+          </div>
+          <p class="text-slate-600 text-[11px]">
+            Lotes normais custam R$ 35,00 e chegam na rodada seguinte. Compras urgentes chegam no mesmo trimestre, mas incorrem em sobretaxa de +30% (R$ 45,50/unidade).
+          </p>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+          <div class="font-bold text-slate-900 flex items-center justify-between">
+            <span>CFO • Banco Aurora & Liquidez</span>
+            <span class="text-emerald-600 font-mono text-[11px]">Rating de Crédito</span>
+          </div>
+          <p class="text-slate-600 text-[11px]">
+            As taxas de juros são calculadas com base no Rating da empresa (A, B, C, D). Amortizações reduzem o passivo oneroso e melhoram os indicadores de liquidez corrente.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+  abrirSideSheet('Diretrizes & Benchmarks', html);
+}
+
+// Salvar / Homologar Decisão
+async function handleSalvarDecisao(e, statusDesejado) {
+  if (e) e.preventDefault();
+  
+  const salaId = document.querySelector('[data-sala-id]').dataset.salaId;
+  const equipeId = document.querySelector('[data-equipe-id]').dataset.equipeId;
+  const rodada = parseInt(document.querySelector('[data-rodada]').dataset.rodada, 10);
+
+  const payload = {
+    preco: parseFloat(document.getElementById('dec-preco').value),
+    marketing: parseFloat(document.getElementById('dec-marketing').value),
+    compraEstoqueNormal: parseInt(document.getElementById('dec-compra-normal').value, 10),
+    compraEstoqueUrgente: parseInt(document.getElementById('dec-compra-urgente').value, 10),
+    solicitarEmprestimo: parseFloat(document.getElementById('dec-solicitar-emprestimo').value),
+    amortizarEmprestimo: parseFloat(document.getElementById('dec-amortizar-emprestimo').value)
+  };
+
+  const justificativa = {};
+
+  if (window.auroraSocket && window.auroraSocket.connected) {
+    const evento = statusDesejado === 'enviada' ? 'decisao:enviar' : 'decisao:rascunho';
+    window.auroraSocket.emit(evento, {
+      equipeId,
+      rodada,
+      payload,
+      justificativa,
+      actionId: `act_${equipeId}_r${rodada}_${statusDesejado}_${Date.now()}`
+    }, (res) => {
+      if (res && res.sucesso) {
+        showToast(statusDesejado === 'enviada' ? 'Decisão final homologada com sucesso!' : 'Rascunho registrado no servidor.', 'sucesso');
+        setTimeout(() => window.location.reload(), 600);
+      } else {
+        showToast((res && res.erro) || 'Erro ao submeter decisão.', 'erro');
+      }
+    });
+  } else {
+    showToast('Aguardando sincronização com o servidor...', 'alerta');
+  }
+}
+
+// Suporte a Atalhos de Teclado (Ctrl+S para Salvar Rascunho, Alt+1..4 para Abas)
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    handleSalvarDecisao(null, 'rascunho');
+  }
+  if (e.altKey && ['1', '2', '3', '4'].includes(e.key)) {
+    e.preventDefault();
+    const idx = parseInt(e.key, 10) - 1;
+    if (DIRETORES[idx]) trocarDiretoria(DIRETORES[idx]);
+  }
+});
+
+// Inicialização imediata
+document.addEventListener('DOMContentLoaded', () => {
+  atualizarCalculos();
+
+  // Escuta atualizações de rascunho de outros membros da equipe em tempo real
+  if (window.auroraSocket) {
+    window.auroraSocket.on('decisao:rascunho_atualizado', (decisao) => {
+      showToast('Um colega de equipe atualizou os dados do rascunho.', 'info');
+      if (decisao && decisao.payload) {
+        if (decisao.payload.preco !== undefined) aplicarPreset('preco', decisao.payload.preco);
+        if (decisao.payload.marketing !== undefined) aplicarPreset('marketing', decisao.payload.marketing);
+        if (decisao.payload.compraEstoqueNormal !== undefined) aplicarPreset('compra-normal', decisao.payload.compraEstoqueNormal);
+        if (decisao.payload.compraEstoqueUrgente !== undefined) aplicarPreset('compra-urgente', decisao.payload.compraEstoqueUrgente);
+        if (decisao.payload.solicitarEmprestimo !== undefined) aplicarPreset('solicitar-emprestimo', decisao.payload.solicitarEmprestimo);
+        if (decisao.payload.amortizarEmprestimo !== undefined) aplicarPreset('amortizar-emprestimo', decisao.payload.amortizarEmprestimo);
+      }
+    });
+  }
+});
+</script>
