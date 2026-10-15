@@ -62,6 +62,7 @@ function abrirSideSheet(titulo, htmlContent) {
   if (contentEl) contentEl.innerHTML = htmlContent;
 
   backdrop.classList.add('active');
+  panel.classList.add('active');
 
   if (typeof gsap !== 'undefined') {
     gsap.to(panel, {
@@ -81,6 +82,7 @@ function fecharSideSheet() {
   if (!panel || !backdrop) return;
 
   backdrop.classList.remove('active');
+  panel.classList.remove('active');
 
   if (typeof gsap !== 'undefined') {
     gsap.to(panel, {

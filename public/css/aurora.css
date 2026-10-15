@@ -254,7 +254,16 @@ body {
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s;
   border-left: 1px solid var(--border-subtle);
+}
+
+.side-sheet-panel.active {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* Acessibilidade: respeitar redução de movimento */
@@ -264,7 +273,6 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-    transform: none !important;
   }
 }
 

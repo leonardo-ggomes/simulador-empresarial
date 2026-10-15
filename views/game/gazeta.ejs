@@ -498,6 +498,7 @@ function abrirSideSheet(titulo, htmlContent) {
   if (contentEl) contentEl.innerHTML = htmlContent;
 
   backdrop.classList.add('active');
+  panel.classList.add('active');
   if (typeof gsap !== 'undefined') {
     gsap.to(panel, { x: 0, duration: 0.28, ease: 'power2.out' });
   } else {
@@ -513,6 +514,7 @@ function fecharSideSheet() {
   const panel = document.getElementById('side-sheet-panel');
   if (!panel || !backdrop) return;
   backdrop.classList.remove('active');
+  panel.classList.remove('active');
   if (typeof gsap !== 'undefined') {
     gsap.to(panel, { x: '100%', duration: 0.22, ease: 'power2.in' });
   } else {

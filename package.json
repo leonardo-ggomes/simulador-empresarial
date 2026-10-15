@@ -2,11 +2,16 @@
   "name": "aurora-business-lab",
   "version": "1.0.0",
   "description": "Aurora Business Lab - Simulador empresarial multiplayer para ensinar análise de dados",
-  "main": "src/server.js",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "electron": "electron .",
+    "build:win": "npx electron-builder --win --x64",
+    "build:portable": "npx electron-builder --win portable --x64",
+    "build:linux": "npx electron-builder --linux --x64",
+    "build:mac": "npx electron-builder --mac",
     "test": "vitest run --fileParallelism=false",
     "test:watch": "vitest --fileParallelism=false"
   },
@@ -34,6 +39,76 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "electron": "44.7.2",
+    "electron-builder": "^25.1.8",
     "vitest": "^3.0.5"
+  },
+  "build": {
+    "electronVersion": "44.7.2",
+    "appId": "com.aurorahub.businesslab",
+    "productName": "Aurora Business Lab",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "public/**/*",
+      "views/**/*",
+      "package.json",
+      "!**/*.sqlite",
+      "!**/*.sqlite-shm",
+      "!**/*.sqlite-wal",
+      "!dist/**",
+      "!build.bat",
+      "!build.sh",
+      "!scripts/**",
+      "!tests/**",
+      "!test/**",
+      "!**/*.test.*",
+      "!**/*.spec.*",
+      "!.git/**",
+      "!.github/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portatil.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "artifactName": "${productName} Setup ${version}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.png"
+    }
   }
 }

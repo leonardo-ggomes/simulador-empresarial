@@ -23,7 +23,7 @@ let dbInstance = null;
 export function getDatabase(dbPath = null) {
   if (dbInstance) return dbInstance;
 
-  const targetPath = dbPath || path.resolve(__dirname, '../../aurora.sqlite');
+  const targetPath = dbPath || process.env.AURORA_DB_PATH || path.resolve(__dirname, '../../aurora.sqlite');
   dbInstance = new DatabaseSync(targetPath);
 
   // Executa PRAGMAs para integridade referencial e performance
